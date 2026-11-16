@@ -1,0 +1,1618 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CP & ATP Generator Kurikulum Merdeka</title>
+  <style>
+    :root {
+      --kemdikbud-navy: #1e3a8a;
+      --kemdikbud-blue: #2563eb;
+      --kemdikbud-hover: #1d4ed8;
+      --merdeka-teal: #0d9488;
+      --merdeka-teal-dark: #0f766e;
+      --merdeka-teal-light: #ccfbf1;
+      --bg-body: #f1f5f9;
+      --bg-surface: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #cbd5e1;
+      --border-light: #e2e8f0;
+      --danger: #dc2626;
+      --danger-bg: #fee2e2;
+      --warning: #d97706;
+      --warning-bg: #fef3c7;
+      --radius: 10px;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-body);
+      color: var(--text-main);
+      line-height: 1.5;
+      font-size: 14px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* TOP HEADER */
+    .app-header {
+      background: linear-gradient(135deg, var(--kemdikbud-navy) 0%, #1e40af 100%);
+      color: #ffffff;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: var(--shadow-md);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .brand-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .brand-title h1 {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      line-height: 1.2;
+    }
+
+    .brand-title p {
+      font-size: 11px;
+      opacity: 0.85;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* NAVIGATION BAR */
+    .nav-bar {
+      background-color: #ffffff;
+      border-bottom: 1px solid var(--border-light);
+      display: flex;
+      padding: 0 20px;
+      gap: 8px;
+    }
+
+    .nav-tab {
+      padding: 12px 18px;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .nav-tab:hover {
+      color: var(--kemdikbud-blue);
+    }
+
+    .nav-tab.active {
+      color: var(--kemdikbud-blue);
+      border-bottom-color: var(--kemdikbud-blue);
+    }
+
+    /* BUTTONS */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background-color: var(--kemdikbud-blue);
+      color: #ffffff;
+    }
+    .btn-primary:hover { background-color: var(--kemdikbud-hover); }
+
+    .btn-success {
+      background-color: var(--merdeka-teal);
+      color: #ffffff;
+    }
+    .btn-success:hover { background-color: var(--merdeka-teal-dark); }
+
+    .btn-danger {
+      background-color: var(--danger-bg);
+      color: var(--danger);
+      border-color: #fca5a5;
+    }
+    .btn-danger:hover { background-color: #fecaca; }
+
+    .btn-secondary {
+      background-color: #e2e8f0;
+      color: var(--text-main);
+    }
+    .btn-secondary:hover { background-color: #cbd5e1; }
+
+    .btn-outline {
+      background-color: transparent;
+      border-color: rgba(255, 255, 255, 0.4);
+      color: #ffffff;
+    }
+    .btn-outline:hover {
+      background-color: rgba(255, 255, 255, 0.15);
+      border-color: #ffffff;
+    }
+
+    .btn-block {
+      width: 100%;
+      padding: 12px;
+      font-size: 14px;
+    }
+
+    .btn-sm {
+      padding: 5px 10px;
+      font-size: 12px;
+      border-radius: 6px;
+    }
+
+    /* BADGES */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-teal { background-color: var(--merdeka-teal-light); color: var(--merdeka-teal-dark); }
+    .badge-blue { background-color: #dbeafe; color: var(--kemdikbud-navy); }
+    .badge-amber { background-color: var(--warning-bg); color: var(--warning); }
+
+    /* LAYOUT CONTAINERS */
+    .app-main {
+      flex: 1;
+      padding: 24px 20px;
+      max-width: 1240px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .page-view {
+      display: none;
+    }
+    .page-view.active {
+      display: block;
+      animation: fadeIn 0.2s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* CARDS */
+    .card {
+      background-color: var(--bg-surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border-light);
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 14px 20px;
+      background-color: #f8fafc;
+      border-bottom: 1px solid var(--border-light);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--kemdikbud-navy);
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .card-body {
+      padding: 20px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+    @media (min-width: 768px) {
+      .grid-2 {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    /* FORMS */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      padding: 10px 12px;
+      font-family: inherit;
+      font-size: 13px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      background-color: #ffffff;
+      color: var(--text-main);
+      transition: all 0.2s;
+    }
+
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      outline: none;
+      border-color: var(--kemdikbud-blue);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+
+    /* LOGIN SCREEN STYLING */
+    .login-wrapper {
+      max-width: 480px;
+      margin: 30px auto;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--border-light);
+      overflow: hidden;
+    }
+
+    .login-banner {
+      background: linear-gradient(135deg, var(--kemdikbud-navy) 0%, #1d4ed8 100%);
+      color: #ffffff;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .login-body {
+      padding: 24px;
+    }
+
+    .auth-toggle {
+      display: flex;
+      background: #f1f5f9;
+      padding: 4px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      gap: 4px;
+    }
+
+    .auth-toggle-btn {
+      flex: 1;
+      padding: 8px 12px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 13px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .auth-toggle-btn.active {
+      background: #ffffff;
+      color: var(--kemdikbud-navy);
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* STAGGER FLOW INDICATOR */
+    .pipeline-indicator {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding: 12px 16px;
+      background-color: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    .pipeline-step {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--kemdikbud-navy);
+    }
+
+    .step-badge {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background-color: var(--kemdikbud-blue);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+    }
+
+    /* DOCUMENT PREVIEW */
+    .doc-paper {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      padding: 36px 40px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      font-family: "Times New Roman", Times, serif;
+      color: #000000;
+      line-height: 1.5;
+    }
+
+    .doc-paper h2 {
+      font-size: 16px;
+      font-weight: bold;
+      text-align: center;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .doc-paper h3 {
+      font-size: 13px;
+      font-weight: bold;
+      text-align: center;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    .doc-paper h4 {
+      font-size: 13px;
+      font-weight: bold;
+      margin: 18px 0 6px 0;
+      border-bottom: 1.5px solid #000000;
+      padding-bottom: 3px;
+    }
+
+    .table-formal {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+      margin-bottom: 16px;
+      font-size: 12px;
+    }
+
+    .table-formal th, .table-formal td {
+      border: 1px solid #475569;
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .table-formal th {
+      background-color: #f1f5f9;
+      font-weight: bold;
+    }
+
+    .meta-grid {
+      width: 100%;
+      margin-bottom: 16px;
+      font-size: 13px;
+    }
+
+    .meta-grid td {
+      padding: 4px 6px;
+      vertical-align: top;
+    }
+
+    .meta-title {
+      width: 170px;
+      font-weight: bold;
+    }
+
+    /* NOTIFICATION TOAST */
+    .toast-tray {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .toast-item {
+      background-color: #1e293b;
+      color: #ffffff;
+      padding: 12px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: toastIn 0.25s ease-out;
+    }
+    .toast-item.success { background-color: var(--merdeka-teal-dark); }
+    .toast-item.warning { background-color: #b45309; }
+    .toast-item.danger { background-color: var(--danger); }
+
+    @keyframes toastIn {
+      from { transform: translateX(40px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* PRINT RULES */
+    @media print {
+      body * { visibility: hidden; }
+      #areaCetakDokumen, #areaCetakDokumen * { visibility: visible; }
+      #areaCetakDokumen {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        border: none;
+        box-shadow: none;
+      }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP HEADER -->
+  <header class="app-header no-print">
+    <div class="brand-box">
+      <div class="brand-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+          <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+        </svg>
+      </div>
+      <div class="brand-title">
+        <h1>CP & ATP Generator Kurikulum Merdeka</h1>
+        <p>Jenjang SMA, SMK, dan SLB (100% Mode Mandiri / Luring)</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <!-- Tombol Unduh File Standalone Offline -->
+      <button type="button" class="btn btn-outline btn-sm" onclick="unduhAplikasiOffline()" title="Simpan sebagai berkas HTML yang bisa dibuka di laptop tanpa koneksi internet">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Simpan File Offline
+      </button>
+
+      <!-- Panel Akun Pengguna Aktif (Ditampilkan setelah login) -->
+      <div id="panelSesiAktif" style="display: none; align-items: center; gap: 12px; background: rgba(255,255,255,0.15); padding: 4px 12px; border-radius: 20px;">
+        <div style="text-align: right; line-height: 1.2;">
+          <div id="hdrNamaGuru" style="font-weight: 700; font-size: 13px;">Guru Pengampu</div>
+          <div id="hdrEmailGuru" style="font-size: 11px; opacity: 0.85;">guru@belajar.id</div>
+        </div>
+        <button type="button" class="btn btn-danger btn-sm" onclick="lakukanLogout()" title="Keluar dan kunci aplikasi ke Menu Login">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+          Keluar
+        </button>
+      </div>
+
+      <!-- Tombol Kembali ke Menu Login (Bila belum masuk) -->
+      <button type="button" id="btnMenuLoginHeader" class="btn btn-outline btn-sm" onclick="tampilkanHalaman('viewLogin')">
+        Menu Login
+      </button>
+    </div>
+  </header>
+
+  <!-- NAVIGATION TABS (Hanya tampil setelah login) -->
+  <nav id="navBarUtama" class="nav-bar no-print" style="display: none;">
+    <button type="button" class="nav-tab active" id="tabBtnDashboard" onclick="tampilkanHalaman('viewDashboard')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+        <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+      </svg>
+      Dashboard Guru
+    </button>
+    <button type="button" class="nav-tab" id="tabBtnGenerator" onclick="tampilkanHalaman('viewGenerator')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+        <polyline points="2 17 12 22 22 17"/>
+        <polyline points="2 12 12 17 22 12"/>
+      </svg>
+      Generator CP & ATP
+    </button>
+  </nav>
+
+  <!-- MAIN VIEW AREA -->
+  <main class="app-main">
+
+    <!-- VIEW 1: MENU LOGIN (HALAMAN UTAMA AWAL) -->
+    <div id="viewLogin" class="page-view active">
+      <div class="login-wrapper">
+        <div class="login-banner">
+          <div style="display: flex; justify-content: center; margin-bottom: 8px;">
+            <div style="width: 44px; height: 44px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+            </div>
+          </div>
+          <h2 style="font-size: 18px; font-weight: 700;">Portal Akun Pendidik belajar.id</h2>
+          <p style="font-size: 12px; opacity: 0.9; margin-top: 4px;">Penyusunan Perencanaan CP, TP, dan ATP Mandiri</p>
+        </div>
+
+        <div class="login-body">
+          <div style="background-color: #ecfdf5; border: 1px solid #a7f3d0; padding: 10px 14px; border-radius: 8px; margin-bottom: 16px; font-size: 12px; color: #065f46;">
+            <strong>Mode Mandiri Luring</strong>: Data akun Anda tersimpan aman langsung di perangkat Anda tanpa perlu koneksi internet.
+          </div>
+
+          <!-- Tombol Switch Antara Masuk dan Daftar Baru -->
+          <div class="auth-toggle">
+            <button type="button" id="tabAuthLogin" class="auth-toggle-btn active" onclick="gantiTabAuth('login')">
+              Masuk Akun
+            </button>
+            <button type="button" id="tabAuthDaftar" class="auth-toggle-btn" onclick="gantiTabAuth('daftar')">
+              Daftar Akun Guru Baru
+            </button>
+          </div>
+
+          <!-- FORM 1: MASUK (LOGIN) -->
+          <form id="formAuthLogin" onsubmit="event.preventDefault(); prosesLoginManual();">
+            <div class="form-group">
+              <label class="form-label">Alamat Surel (Email) belajar.id</label>
+              <input type="email" id="txtEmailLogin" class="form-input" placeholder="nama.guru@guru.sma.belajar.id" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Kata Sandi</label>
+              <input type="password" id="txtPassLogin" class="form-input" placeholder="Masukkan kata sandi Anda" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">
+              Masuk ke Aplikasi
+            </button>
+            <div style="text-align: center; margin-top: 14px; font-size: 12px; color: var(--text-muted);">
+              Belum memiliki akun? <a href="javascript:void(0)" onclick="gantiTabAuth('daftar')" style="color: var(--kemdikbud-blue); font-weight: 600; text-decoration: none;">Daftar Mandiri di sini</a>
+            </div>
+          </form>
+
+          <!-- FORM 2: PENDAFTARAN GURU MANDIRI -->
+          <form id="formAuthDaftar" style="display: none;" onsubmit="event.preventDefault(); prosesDaftarMandiri();">
+            <div class="form-group">
+              <label class="form-label">Nama Lengkap Guru (dengan Gelar)</label>
+              <input type="text" id="regNama" class="form-input" placeholder="contoh: Drs. Hendra Gunawan, M.Pd." required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">NIP / NUPTK / NIK (Opsional)</label>
+              <input type="text" id="regNip" class="form-input" placeholder="contoh: 19800315 200501 1 007">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Asal Satuan Pendidikan (Sekolah)</label>
+              <input type="text" id="regSekolah" class="form-input" placeholder="contoh: SMA Negeri 3 Bandung" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Jenjang Pendidikan</label>
+              <select id="regJenjang" class="form-select" required>
+                <option value="SMA">SMA (Sekolah Menengah Atas)</option>
+                <option value="SMK">SMK (Sekolah Menengah Kejuruan)</option>
+                <option value="SLB">SLB (Pendidikan Khusus / SMALB)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Mata Pelajaran yang Diampu</label>
+              <input type="text" id="regMapel" class="form-input" placeholder="contoh: Bahasa Indonesia" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Surel Resmi belajar.id</label>
+              <input type="email" id="regEmail" class="form-input" placeholder="contoh: nama.guru@guru.sma.belajar.id" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Buat Kata Sandi</label>
+              <input type="password" id="regPass" class="form-input" placeholder="Buat kata sandi akun" required minlength="4">
+            </div>
+            <button type="submit" class="btn btn-success btn-block">
+              Daftar & Masuk ke Aplikasi
+            </button>
+            <div style="text-align: center; margin-top: 14px; font-size: 12px; color: var(--text-muted);">
+              Sudah pernah mendaftar? <a href="javascript:void(0)" onclick="gantiTabAuth('login')" style="color: var(--kemdikbud-blue); font-weight: 600; text-decoration: none;">Masuk di sini</a>
+            </div>
+          </form>
+
+          <!-- HAK CIPTA (COPYRIGHT) DI LAMAN LOGIN -->
+          <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-light); text-align: center; font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+            <div style="font-weight: 700; color: var(--kemdikbud-navy); letter-spacing: 0.02em;">
+              &copy; Ahmad Husairi - Pengawas Dikmen - Disdikprovsu
+            </div>
+            <div style="font-size: 10px; opacity: 0.8; margin-top: 2px;">
+              Hak Cipta Dilindungi &bull; Dinas Pendidikan Provinsi Sumatera Utara
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW 2: DASHBOARD GURU -->
+    <div id="viewDashboard" class="page-view">
+      <div class="card">
+        <div class="card-header">
+          <span>Identitas Pendidik & Satuan Pendidikan</span>
+          <span class="badge badge-teal">Otomatis Terhubung ke Dokumen Formal</span>
+        </div>
+        <div class="card-body">
+          <p style="margin-bottom: 18px; font-size: 13px; color: var(--text-muted);">
+            Perbarui data diri di bawah ini. Informasi ini akan langsung dicetak pada kop surat perencanaan pembelajaran, kolom analisis CP, dan kolom tanda tangan pengesahan kepala sekolah dan guru pengampu.
+          </p>
+
+          <form onsubmit="event.preventDefault(); simpanPerubahanProfil();">
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label">Nama Lengkap Guru (Beserta Gelar)</label>
+                <input type="text" id="inpNama" class="form-input" placeholder="Contoh: Dra. Hj. Ratna Juwita, M.Pd." required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">NIP / NUPTK / NIK</label>
+                <input type="text" id="inpNip" class="form-input" placeholder="Contoh: 19780512 200501 2 004">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Asal Satuan Pendidikan (Sekolah)</label>
+                <input type="text" id="inpSekolah" class="form-input" placeholder="Contoh: SMA Negeri 1 Jakarta" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Fokus Jenjang Pendidikan</label>
+                <select id="inpJenjang" class="form-select">
+                  <option value="SMA">SMA (Sekolah Menengah Atas)</option>
+                  <option value="SMK">SMK (Sekolah Menengah Kejuruan)</option>
+                  <option value="SLB">SLB (Pendidikan Khusus / SMALB)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Mata Pelajaran yang Diampu</label>
+                <input type="text" id="inpMapel" class="form-input" placeholder="Contoh: Biologi / DKV / Tata Boga" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Surel (Email) belajar.id Terdaftar</label>
+                <input type="email" id="inpEmail" class="form-input" readonly style="background-color: #f1f5f9;">
+              </div>
+            </div>
+
+            <div style="margin-top: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+              <span style="font-size: 12px; color: var(--text-muted);">
+                *Perubahan data akan langsung disimpan di peramban ini.
+              </span>
+              <button type="submit" class="btn btn-primary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                  <polyline points="17 21 17 13 7 13 7 21"/>
+                  <line x1="7" y1="3" x2="7" y2="8"/>
+                  <line x1="15" y1="3" x2="15" y2="8"/>
+                </svg>
+                Simpan Data Guru
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- HAK CIPTA (COPYRIGHT) DI LAMAN DASHBOARD -->
+      <div style="margin-top: 20px; padding: 14px 20px; background: #ffffff; border: 1px solid var(--border-light); border-radius: var(--radius); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; font-size: 12px; color: var(--text-muted);">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--kemdikbud-blue);">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          <span>Aplikasi Perencanaan CP & ATP Kurikulum Merdeka</span>
+        </div>
+        <div style="text-align: right; font-weight: 600; color: var(--kemdikbud-navy);">
+          &copy; Ahmad Husairi - Pengawas Dikmen - Disdikprovsu
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW 3: GENERATOR CP & ATP -->
+    <div id="viewGenerator" class="page-view">
+      <div class="card no-print">
+        <div class="card-header">
+          <span>Formulir Parameter Perencanaan CP</span>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="muatContohCP('SMA')">Contoh CP SMA</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="muatContohCP('SMK')">Contoh CP SMK</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="muatContohCP('SLB')">Contoh CP SLB</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="pipeline-indicator">
+            <div class="pipeline-step">
+              <span class="step-badge">1</span>
+              <span>Dekonstruksi KKO (Bloom & SOLO) & Submateri</span>
+            </div>
+            <div style="color: #94a3b8;">→</div>
+            <div class="pipeline-step">
+              <span class="step-badge">2</span>
+              <span>Perumusan Tujuan Pembelajaran (TP)</span>
+            </div>
+            <div style="color: #94a3b8;">→</div>
+            <div class="pipeline-step">
+              <span class="step-badge">3</span>
+              <span>Pengurutan ATP Sesuai Teknik & Prinsip</span>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="form-group">
+              <label class="form-label">Mata Pelajaran</label>
+              <input type="text" id="genInputMapel" class="form-input" placeholder="Contoh: Biologi">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Fase Pembelajaran (Khusus SMA, SMK, dan SLB)</label>
+              <select id="genInputFase" class="form-select">
+                <option value="Fase E (Kelas 10 SMA/SMK)">Fase E (Kelas 10 SMA/SMK)</option>
+                <option value="Fase F (Kelas 11-12 SMA/SMK)">Fase F (Kelas 11-12 SMA/SMK)</option>
+                <option value="Fase E - SLB (Kelas 10 SMALB - Akomodatif)">Fase E - SLB (Kelas 10 SMALB - Akomodatif)</option>
+                <option value="Fase F - SLB (Kelas 11-12 SMALB - Kemandirian)">Fase F - SLB (Kelas 11-12 SMALB - Kemandirian)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="form-group">
+              <label class="form-label">Teknik Pengurutan ATP (Pedoman Penyusunan ATP)</label>
+              <select id="genInputTeknikATP" class="form-select">
+                <option value="Otomatis">Otomatis (Sesuaikan Karakteristik Mapel & Fase)</option>
+                <option value="Konkret ke Abstrak">1. Konkret ke Abstrak (Benda/fenomena nyata ke teori abstrak)</option>
+                <option value="Deduktif">2. Deduktif (Konsep umum mengerucut ke spesifik)</option>
+                <option value="Mudah ke Sulit">3. Mudah ke Sulit (Kompleksitas rendah ke tinggi)</option>
+                <option value="Hierarki">4. Hierarki (Kemampuan prasyarat wajib sebelum tahap lanjut)</option>
+                <option value="Prosedural">5. Prosedural (Urutan langkah/tahapan kerja suatu proses)</option>
+                <option value="Scaffolding">6. Scaffolding (Pengurangan bimbingan menuju kemandirian)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Tempat & Tanggal Pengesahan (Opsional)</label>
+              <input type="text" id="genInputTempatTanggal" class="form-input" placeholder="Contoh: Tanjung Tiram, 12 Nopember 2026 (Kosongkan jika diisi manual)">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Teks Capaian Pembelajaran (CP) BSKAP</label>
+            <textarea id="genInputTeksCP" class="form-textarea" rows="5" placeholder="Salin dan tempelkan paragraf Capaian Pembelajaran (CP) di sini..."></textarea>
+          </div>
+
+          <button type="button" id="btnProsesGenerator" class="btn btn-success btn-block" onclick="jalankanPipelineGenerator()">
+            Jalankan Generator CP & ATP (Multi-Stagger Pipeline)
+          </button>
+        </div>
+      </div>
+
+      <!-- KOTAK HASIL DOKUMEN PERENCANAAN -->
+      <div id="kotakHasilPerencanaan" style="display: none;">
+        <div class="card no-print">
+          <div class="card-header">
+            <span>Hasil Dokumen Resmi Siap Cetak / Unduh</span>
+            <div style="display: flex; gap: 10px;">
+              <button type="button" class="btn btn-primary btn-sm" onclick="unduhBerkasWord()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                </svg>
+                Unduh Word (.doc)
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="window.print()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="6 9 6 2 18 2 18 9"/>
+                  <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+                  <rect x="6" y="14" width="12" height="8"/>
+                </svg>
+                Cetak / PDF
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id="areaCetakDokumen" class="doc-paper">
+          <h2>DOKUMEN PERENCANAAN PEMBELAJARAN KURIKULUM MERDEKA</h2>
+          <h3>ANALISIS CAPAIAN PEMBELAJARAN (CP), PERUMUSAN TP, DAN ALUR TUJUAN PEMBELAJARAN (ATP)</h3>
+
+          <table class="meta-grid">
+            <tr>
+              <td class="meta-title">Nama Guru Pengampu</td>
+              <td style="width: 12px;">:</td>
+              <td><span id="lblDocNama">-</span></td>
+            </tr>
+            <tr>
+              <td class="meta-title">Satuan Pendidikan</td>
+              <td>:</td>
+              <td><span id="lblDocSekolah">-</span></td>
+            </tr>
+            <tr>
+              <td class="meta-title">Mata Pelajaran</td>
+              <td>:</td>
+              <td><span id="lblDocMapel">-</span></td>
+            </tr>
+            <tr>
+              <td class="meta-title">Fase / Kelas Target</td>
+              <td>:</td>
+              <td><span id="lblDocFase">-</span></td>
+            </tr>
+          </table>
+
+          <h4>BAGIAN I: DEKONSTRUKSI KKO (TAKSONOMI BLOOM &amp; SOLO) SERTA PENGAYAAN SUBMATERI</h4>
+          <p style="font-size: 11px; margin-bottom: 8px; color: #334155;">
+            <i>Analisis mendalam Kata Kerja Operasional berdasarkan Taksonomi Bloom Revisi &amp; Taksonomi SOLO serta pengayaan submateri esensial yang tetap berpijak pada substansi CP.</i>
+          </p>
+          <table class="table-formal">
+            <thead>
+              <tr>
+                <th style="width: 45px; text-align: center;">No</th>
+                <th style="width: 220px;">Pengembangan KKO &amp; Taksonomi</th>
+                <th>Uraian Submateri Inti &amp; Pengayaan Sumber Belajar</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyStagger1">
+              <!-- Diisi otomatis oleh skrip -->
+            </tbody>
+          </table>
+
+          <h4>BAGIAN II: RUMUSAN TUJUAN PEMBELAJARAN (TP)</h4>
+          <p style="font-size: 11px; margin-bottom: 8px; color: #334155;">
+            <i>Perpaduan sistematis antara KKO (Kompetensi) dan Submateri yang diperkaya menjadi rumusan Tujuan Pembelajaran yang terukur.</i>
+          </p>
+          <ul id="ulStagger2" style="padding-left: 20px; font-size: 12px; margin-bottom: 16px;">
+            <!-- Diisi otomatis oleh skrip -->
+          </ul>
+
+          <h4>BAGIAN III: ALUR TUJUAN PEMBELAJARAN (ATP) LINEAR</h4>
+          <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; padding: 10px 12px; margin-bottom: 10px; font-size: 12px;">
+            <p style="margin-bottom: 4px;">
+              <b>Teknik Pengurutan ATP yang Digunakan:</b> <span id="lblTeknikATP" style="color: #1e3a8a; font-weight: bold;">-</span>
+            </p>
+            <p style="margin-bottom: 6px; font-size: 11px; color: #334155;">
+              <b>Rasionalisasi Pemilihan Teknik:</b> <span id="lblRasionalTeknikATP">-</span>
+            </p>
+            <p style="margin: 0; font-size: 11px; color: #0f172a;">
+              <b>Pemenuhan 4 Prinsip Penyusunan ATP:</b> (1) <i>Linear dan Satu Arah</i> (disusun kronologis tanpa bercabang dari awal hingga akhir fase); (2) <i>Tuntas Satu Fase</i> (menuntaskan seluruh kompetensi fase secara utuh); (3) <i>Pemahaman Kolaboratif</i> (siap diselaraskan bersama tim guru/MGMP satu fase); dan (4) <i>Fokus pada CP</i> (berfokus pada kompetensi utama CP tanpa mencantumkan strategi pedagogi secara detail).
+            </p>
+          </div>
+          <table class="table-formal">
+            <thead>
+              <tr>
+                <th style="width: 80px; text-align: center;">Alur Ke-</th>
+                <th style="width: 80px; text-align: center;">Kode TP</th>
+                <th>Rumusan Alur Tujuan Pembelajaran (Fokus Kompetensi Utama CP)</th>
+                <th style="width: 80px; text-align: center;">Alokasi JP</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyStagger3">
+              <!-- Diisi otomatis oleh skrip -->
+            </tbody>
+          </table>
+
+          <!-- TANDA TANGAN PENGESAHAN DOKUMEN -->
+          <div style="margin-top: 40px; display: flex; justify-content: space-between; page-break-inside: avoid;">
+            <div style="font-size: 12px; width: 220px; text-align: center;">
+              Mengetahui,<br>
+              Kepala Satuan Pendidikan<br><br><br><br>
+              <b>_________________________</b><br>
+              NIP. .....................................
+            </div>
+            <div style="font-size: 12px; width: 260px; text-align: center;">
+              <span id="lblDocLokasi">......................., .............................. 2026</span><br>
+              Guru Mata Pelajaran<br><br><br><br>
+              <b><span id="lblDocTtdNama">Nama Guru</span></b><br>
+              NIP. <span id="lblDocTtdNip">-</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- WADAH TOAST NOTIFIKASI -->
+  <div id="toastTray" class="toast-tray no-print"></div>
+
+  <script>
+    // State Pengguna Aktif & Data Akun Tersimpan di Perangkat
+    let penggunaAktif = null;
+
+    // Membaca daftar akun guru terdaftar dari localStorage
+    function dapatkanAkunTersimpan() {
+      try {
+        const data = localStorage.getItem('cp_generator_daftar_guru');
+        return data ? JSON.parse(data) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    // Menyimpan daftar akun ke localStorage
+    function simpanDaftarAkun(daftar) {
+      try {
+        localStorage.setItem('cp_generator_daftar_guru', JSON.stringify(daftar));
+      } catch (e) {
+        console.error("Gagal menyimpan ke penyimpanan lokal", e);
+      }
+    }
+
+    // Fungsi Notifikasi Toast (Pengganti alert)
+    function tampilkanToast(teks, tipe = 'success') {
+      const tray = document.getElementById('toastTray');
+      const item = document.createElement('div');
+      item.className = `toast-item ${tipe}`;
+      item.innerText = teks;
+      tray.appendChild(item);
+      setTimeout(() => {
+        item.style.opacity = '0';
+        item.style.transition = 'opacity 0.3s ease';
+        setTimeout(() => item.remove(), 300);
+      }, 3000);
+    }
+
+    // Berpindah tab antara Masuk dan Daftar Akun Baru
+    function gantiTabAuth(tab) {
+      const btnLogin = document.getElementById('tabAuthLogin');
+      const btnDaftar = document.getElementById('tabAuthDaftar');
+      const formLogin = document.getElementById('formAuthLogin');
+      const formDaftar = document.getElementById('formAuthDaftar');
+
+      if (tab === 'login') {
+        btnLogin.classList.add('active');
+        btnDaftar.classList.remove('active');
+        formLogin.style.display = 'block';
+        formDaftar.style.display = 'none';
+      } else {
+        btnDaftar.classList.add('active');
+        btnLogin.classList.remove('active');
+        formDaftar.style.display = 'block';
+        formLogin.style.display = 'none';
+      }
+    }
+
+    // Navigasi Tampilan Halaman
+    function tampilkanHalaman(idTarget) {
+      if (!penggunaAktif && idTarget !== 'viewLogin') {
+        tampilkanToast('Silakan masuk atau daftarkan akun terlebih dahulu!', 'warning');
+        idTarget = 'viewLogin';
+      }
+
+      document.querySelectorAll('.page-view').forEach(el => {
+        el.classList.remove('active');
+      });
+
+      const target = document.getElementById(idTarget);
+      if (target) {
+        target.classList.add('active');
+      }
+
+      // Perbarui status tab navigasi aktif
+      document.querySelectorAll('.nav-tab').forEach(btn => btn.classList.remove('active'));
+      if (idTarget === 'viewDashboard') {
+        document.getElementById('tabBtnDashboard').classList.add('active');
+      } else if (idTarget === 'viewGenerator') {
+        document.getElementById('tabBtnGenerator').classList.add('active');
+      }
+    }
+
+    // Validasi domain surel belajar.id
+    function validasiEmailBelajarId(email) {
+      return /^[a-zA-Z0-9._%+-]+@([a-zA-Z0-9.-]+\.)*belajar\.id$/i.test(email.trim());
+    }
+
+    // Aktivasi sesi guru setelah login atau daftar
+    function aktifkanSesiGuru(dataGuru) {
+      penggunaAktif = dataGuru;
+
+      // Perbarui informasi header
+      document.getElementById('hdrNamaGuru').innerText = dataGuru.nama;
+      document.getElementById('hdrEmailGuru').innerText = dataGuru.email;
+      document.getElementById('panelSesiAktif').style.display = 'flex';
+      document.getElementById('btnMenuLoginHeader').style.display = 'none';
+      document.getElementById('navBarUtama').style.display = 'flex';
+
+      // Sinkronkan ke form Dashboard
+      document.getElementById('inpNama').value = dataGuru.nama || '';
+      document.getElementById('inpNip').value = dataGuru.nip || '';
+      document.getElementById('inpSekolah').value = dataGuru.sekolah || '';
+      document.getElementById('inpJenjang').value = dataGuru.jenjang || 'SMA';
+      document.getElementById('inpMapel').value = dataGuru.mapel || '';
+      document.getElementById('inpEmail').value = dataGuru.email || '';
+
+      // Sinkronkan ke form Generator
+      document.getElementById('genInputMapel').value = dataGuru.mapel || '';
+      if (dataGuru.jenjang === 'SLB') {
+        document.getElementById('genInputFase').value = 'Fase E - SLB (Kelas 10 SMALB - Akomodatif)';
+      } else {
+        document.getElementById('genInputFase').value = 'Fase E (Kelas 10 SMA/SMK)';
+      }
+
+      tampilkanHalaman('viewDashboard');
+    }
+
+    // Proses Masuk (Login)
+    function prosesLoginManual() {
+      const email = document.getElementById('txtEmailLogin').value.trim().toLowerCase();
+      const pass = document.getElementById('txtPassLogin').value;
+
+      if (!validasiEmailBelajarId(email)) {
+        tampilkanToast('Gunakan alamat surel resmi dengan domain @*.belajar.id!', 'danger');
+        return;
+      }
+
+      const daftarAkun = dapatkanAkunTersimpan();
+      const akunCocok = daftarAkun.find(a => a.email === email);
+
+      if (!akunCocok) {
+        tampilkanToast('Akun belum terdaftar di perangkat ini. Silakan klik tab "Daftar Akun Guru Baru".', 'warning');
+        gantiTabAuth('daftar');
+        document.getElementById('regEmail').value = email;
+        return;
+      }
+
+      if (akunCocok.pass !== pass) {
+        tampilkanToast('Kata sandi tidak sesuai. Silakan periksa kembali.', 'danger');
+        return;
+      }
+
+      aktifkanSesiGuru(akunCocok);
+      tampilkanToast(`Selamat datang kembali, ${akunCocok.nama}!`, 'success');
+    }
+
+    // Proses Pendaftaran Mandiri Guru Baru
+    function prosesDaftarMandiri() {
+      const nama = document.getElementById('regNama').value.trim();
+      const nip = document.getElementById('regNip').value.trim();
+      const sekolah = document.getElementById('regSekolah').value.trim();
+      const jenjang = document.getElementById('regJenjang').value;
+      const mapel = document.getElementById('regMapel').value.trim();
+      const email = document.getElementById('regEmail').value.trim().toLowerCase();
+      const pass = document.getElementById('regPass').value;
+
+      if (!validasiEmailBelajarId(email)) {
+        tampilkanToast('Pendaftaran hanya menerima surel resmi berakhiran belajar.id!', 'danger');
+        return;
+      }
+
+      const daftarAkun = dapatkanAkunTersimpan();
+      const idxLama = daftarAkun.findIndex(a => a.email === email);
+
+      const profilBaru = { nama, nip, sekolah, jenjang, mapel, email, pass };
+      if (idxLama >= 0) {
+        daftarAkun[idxLama] = profilBaru;
+      } else {
+        daftarAkun.push(profilBaru);
+      }
+
+      simpanDaftarAkun(daftarAkun);
+      aktifkanSesiGuru(profilBaru);
+      tampilkanToast('Pendaftaran berhasil! Akun tersimpan di perangkat.', 'success');
+    }
+
+    // Proses Keluar (Logout)
+    function lakukanLogout() {
+      penggunaAktif = null;
+      document.getElementById('panelSesiAktif').style.display = 'none';
+      document.getElementById('btnMenuLoginHeader').style.display = 'inline-flex';
+      document.getElementById('navBarUtama').style.display = 'none';
+      document.getElementById('txtPassLogin').value = '';
+      tampilkanHalaman('viewLogin');
+      tampilkanToast('Anda telah keluar. Sesi dikunci ke Menu Login.', 'warning');
+    }
+
+    // Simpan Perubahan Profil di Dashboard
+    function simpanPerubahanProfil() {
+      if (!penggunaAktif) return;
+
+      penggunaAktif.nama = document.getElementById('inpNama').value.trim();
+      penggunaAktif.nip = document.getElementById('inpNip').value.trim();
+      penggunaAktif.sekolah = document.getElementById('inpSekolah').value.trim();
+      penggunaAktif.jenjang = document.getElementById('inpJenjang').value;
+      penggunaAktif.mapel = document.getElementById('inpMapel').value.trim();
+
+      const daftarAkun = dapatkanAkunTersimpan();
+      const idx = daftarAkun.findIndex(a => a.email === penggunaAktif.email);
+      if (idx >= 0) {
+        daftarAkun[idx] = penggunaAktif;
+        simpanDaftarAkun(daftarAkun);
+      }
+
+      document.getElementById('hdrNamaGuru').innerText = penggunaAktif.nama;
+      document.getElementById('genInputMapel').value = penggunaAktif.mapel;
+      tampilkanToast('Data identitas guru berhasil diperbarui dan disinkronkan!', 'success');
+    }
+
+    // Memuat Contoh CP BSKAP untuk Pengujian Cepat
+    function muatContohCP(jenjang) {
+      if (jenjang === 'SMA') {
+        document.getElementById('genInputMapel').value = 'Biologi';
+        document.getElementById('genInputFase').value = 'Fase E (Kelas 10 SMA/SMK)';
+        document.getElementById('genInputTeksCP').value = 'Pada akhir Fase E, peserta didik memiliki kemampuan untuk menciptakan solusi atas permasalahan-permasalahan berdasarkan isu lokal, nasional atau global terkait pemahaman keanekaragaman makhluk hidup dan peranannya, virus dan peranannya, inovasi teknologi biologi, komponen ekosistem dan interaksi antar komponen serta perubahan lingkungan.';
+      } else if (jenjang === 'SMK') {
+        document.getElementById('genInputMapel').value = 'Desain Komunikasi Visual (DKV)';
+        document.getElementById('genInputFase').value = 'Fase F (Kelas 11-12 SMA/SMK)';
+        document.getElementById('genInputTeksCP').value = 'Pada akhir Fase F, peserta didik mampu mengaplikasikan prinsip dasar perancangan visual, mengoperasikan perangkat lunak desain grafis vektor dan bitmap, menerapkan kesehatan dan keselamatan kerja (K3LH), serta memproduksi karya identitas visual (branding) sesuai brief kebutuhan industri kreatif.';
+      } else {
+        document.getElementById('genInputMapel').value = 'Keterampilan Tata Boga';
+        document.getElementById('genInputFase').value = 'Fase E - SLB (Kelas 10 SMALB - Akomodatif)';
+        document.getElementById('genInputTeksCP').value = 'Pada akhir Fase E SMALB, peserta didik mampu mengenal peralatan dapur dan bahan makanan pokok, menerapkan keselamatan serta kebersihan diri di area kerja, menirukan prosedur pembuatan kudapan tradisional sederhana, serta membiasakan penyajian hasil olahan secara mandiri dan rapi.';
+      }
+      tampilkanToast(`Contoh CP jenjang ${jenjang} berhasil dimuat ke formulir!`, 'success');
+    }
+
+    // Eksekusi Mesin Generator CP Multi-Stagger dengan Ekstraksi Dinamis & Taksonomi Bloom + SOLO
+    function ekstrakTopikDariCP(teks, mapel) {
+      // Membersihkan frasa pembuka standar CP BSKAP agar mendapat inti materi sebenarnya
+      let bersih = teks
+        .replace(/pada akhir fase [a-f](\s*smalb)?,?\s*/gi, '')
+        .replace(/peserta didik (memiliki kemampuan untuk|mampu|dapat)\s*/gi, '')
+        .replace(/[\r\n]+/g, ' ')
+        .trim();
+
+      // Memecah kalimat dan klausa utama dari CP
+      let klausa = bersih
+        .split(/[.;]+/)
+        .map(s => s.trim())
+        .filter(s => s.length > 15);
+
+      // Mengambil kata kunci frasa materi (mengabaikan kata sambung umum)
+      const stopWords = new Set(['yang', 'dan', 'atau', 'dengan', 'untuk', 'dalam', 'pada', 'dari', 'secara', 'serta', 'melalui', 'sebagai', 'terhadap', 'antara', 'agar', 'peserta', 'didik', 'mampu', 'dapat', 'memiliki', 'kemampuan', 'akhir', 'fase', 'berbagai', 'secara', 'tepat', 'benar', 'baik', 'sederhana']);
+      
+      let frasaInti = klausa.map(k => {
+        let kata = k.split(/\s+/);
+        // Ambil potongan substantif setelah KKO pertama jika ada
+        if (kata.length > 3) {
+          return kata.slice(1, Math.min(kata.length, 9)).join(' ').replace(/[,:]+$/, '');
+        }
+        return k;
+      });
+
+      if (frasaInti.length === 0) {
+        frasaInti = [`konsep dasar dan prinsip utama ${mapel}`, `penerapan serta pemecahan masalah ${mapel}`];
+      }
+
+      const topik1 = frasaInti[0] || `konsep fundamental ${mapel}`;
+      const topik2 = frasaInti[1] || `mekanisme, struktur, dan keterkaitan komponen dalam ${topik1}`;
+      const topik3 = frasaInti[2] || `analisis studi kasus, isu aktual, dan evaluasi ${topik1}`;
+
+      return { topik1, topik2, topik3, semuaKlausa: klausa };
+    }
+
+    function jalankanPipelineGenerator() {
+      const teks = document.getElementById('genInputTeksCP').value.trim();
+      const mapel = document.getElementById('genInputMapel').value.trim() || (penggunaAktif ? penggunaAktif.mapel : 'Mata Pelajaran');
+      const fase = document.getElementById('genInputFase').value;
+      const pilihanTeknik = document.getElementById('genInputTeknikATP').value;
+
+      if (teks.length < 25) {
+        tampilkanToast('Teks CP terlalu pendek! Masukkan minimal 25 karakter agar analisis mendalam dapat bekerja.', 'warning');
+        return;
+      }
+
+      const btn = document.getElementById('btnProsesGenerator');
+      btn.innerText = 'Menganalisis KKO & Menyusun ATP Sesuai Teknik & Prinsip...';
+      btn.style.opacity = '0.7';
+
+      setTimeout(() => {
+        const isSLB = fase.includes('SLB');
+        const isSMK = fase.includes('SMK') || mapel.toLowerCase().includes('dkv') || mapel.toLowerCase().includes('kejuruan') || mapel.toLowerCase().includes('teknik') || mapel.toLowerCase().includes('rekayasa');
+        const hasilEkstrak = ekstrakTopikDariCP(teks, mapel);
+
+        // Tentukan Teknik Pengurutan ATP sesuai pilihan atau karakteristik jenjang/mapel
+        let teknikTerpilih = pilihanTeknik;
+        if (teknikTerpilih === 'Otomatis') {
+          if (isSLB) {
+            teknikTerpilih = 'Scaffolding';
+          } else if (isSMK) {
+            teknikTerpilih = 'Prosedural';
+          } else {
+            teknikTerpilih = 'Konkret ke Abstrak';
+          }
+        }
+
+        // Deskripsi & Urutan Indeks TP berdasarkan 6 Teknik Pengurutan ATP
+        // Indeks mengacu pada susunan TP:
+        // 0: Pengenalan/Konkret/Umum (Dasar)
+        // 1: Klasifikasi/Spesifikasi/Komponen
+        // 2: Penerapan/Prosedur Dasar
+        // 3: Analisis Hubungan/Mekanisme/Prasyarat Lanjut
+        // 4: Evaluasi/Uji Kualitas
+        // 5: Kreasi/Kemandirian Akhir Fase
+        const konfigurasiTeknik = {
+          'Konkret ke Abstrak': {
+            nama: 'Konkret ke Abstrak',
+            rasional: 'Alur dimulai dari pengamatan objek nyata, fakta empiris, dan fenomena konkret di sekitar peserta didik, kemudian bergerak secara bertahap menuju pemahaman konsep, analisis hubungan, evaluasi, hingga perancangan gagasan yang bersifat abstrak.',
+            urutan5: [0, 1, 2, 3, 4],
+            urutan6: [0, 1, 2, 3, 4, 5]
+          },
+          'Deduktif': {
+            nama: 'Deduktif (Umum ke Spesifik)',
+            rasional: 'Alur diawali dengan penguasaan kerangka konsep, prinsip, atau definisi yang bersifat umum/menyeluruh pada fase ini, lalu mengerucut ke bagian-bagian yang lebih spesifik, penerapan kasus khusus, hingga evaluasi dan sintesis akhir.',
+            urutan5: [1, 0, 3, 2, 4],
+            urutan6: [1, 0, 3, 2, 4, 5]
+          },
+          'Mudah ke Sulit': {
+            nama: 'Mudah ke Sulit',
+            rasional: 'Alur disusun berdasarkan tingkat beban kognitif dari materi dan keterampilan yang paling sederhana (mengingat/memahami), berlanjut ke penerapan standar, hingga analisis dan penciptaan karya yang kompleks.',
+            urutan5: [0, 1, 2, 3, 4],
+            urutan6: [0, 1, 2, 3, 4, 5]
+          },
+          'Hierarki': {
+            nama: 'Hierarki (Kompetensi Prasyarat)',
+            rasional: 'Alur mengurutkan kemampuan prasyarat yang wajib dikuasai peserta didik sebelum dapat melanjutkan ke kompetensi tingkat berikutnya sehingga tidak terjadi kesenjangan pemahaman antar-tahap.',
+            urutan5: [0, 2, 1, 3, 4],
+            urutan6: [0, 2, 1, 3, 4, 5]
+          },
+          'Prosedural': {
+            nama: 'Prosedural (Tahapan Kerja / Proses)',
+            rasional: 'Alur disusun secara kronologis mengikuti tahapan kerja suatu proses atau Standar Operasional Prosedur (SOP), mulai dari persiapan, pemahaman spesifikasi, eksekusi langkah kerja, pengujian mutu, hingga penyajian hasil akhir.',
+            urutan5: [0, 2, 1, 3, 4],
+            urutan6: [0, 2, 3, 1, 4, 5]
+          },
+          'Scaffolding': {
+            nama: 'Scaffolding (Bimbingan ke Kemandirian)',
+            rasional: 'Alur dirancang dengan memberikan bimbingan penuh dan peragaan terstruktur di awal pembelajaran, kemudian mengurangi bantuan guru secara bertahap seiring meningkatnya keterampilan dan kemandirian peserta didik hingga tuntas fase.',
+            urutan5: [0, 1, 2, 3, 4],
+            urutan6: [0, 1, 2, 3, 4, 5]
+          }
+        };
+
+        const infoTeknik = konfigurasiTeknik[teknikTerpilih] || konfigurasiTeknik['Konkret ke Abstrak'];
+
+        let dataAnalisis = [];
+
+        if (isSLB) {
+          // Pengembangan KKO Akomodatif & Adaptif (Bloom C1-C3 & SOLO Unistruktural - Relasional)
+          dataAnalisis = [
+            {
+              kko: "Mengenal dan Menyebutkan",
+              taksonomi: "Bloom: C1 (Mengingat) | SOLO: Unistruktural",
+              materi: `Pengenalan fakta dasar, istilah, dan objek konkret terkait ${hasilEkstrak.topik1}`,
+              pengayaan: `Pengayaan Visual & Sensorik: Identifikasi alat, bahan, simbol keselamatan, serta contoh nyata di lingkungan sekitar peserta didik.`,
+              konteks: "media visual konkret, kartu bergambar, dan demonstrasi langsung",
+              jp: "10 JP"
+            },
+            {
+              kko: "Mengidentifikasi dan Membedakan",
+              taksonomi: "Bloom: C2 (Memahami) | SOLO: Multistruktural",
+              materi: `Klasifikasi fungsi, ciri utama, dan aturan dasar pada ${hasilEkstrak.topik1}`,
+              pengayaan: `Pengayaan Keterampilan Hidup: Pengelompokan alat/bahan sesuai fungsinya serta membedakan prosedur yang aman dan berisiko.`,
+              konteks: "latihan memilah objek nyata dan tanya jawab terbimbing",
+              jp: "12 JP"
+            },
+            {
+              kko: "Menirukan dan Mendemonstrasikan",
+              taksonomi: "Bloom: C3 (Menerapkan) | SOLO: Multistruktural",
+              materi: `Urutan langkah kerja (SOP) sederhana dan keselamatan kerja pada ${hasilEkstrak.topik2}`,
+              pengayaan: `Pengayaan Prosedural: Simulasi langkah demi langkah (task analysis) mulai dari persiapan, pelaksanaan, hingga merapikan kembali.`,
+              konteks: "peragaan bertahap (scaffolding) dan pendampingan terstruktur",
+              jp: "14 JP"
+            },
+            {
+              kko: "Mempraktikkan dan Menghubungkan",
+              taksonomi: "Bloom: C3 (Menerapkan) | SOLO: Relasional",
+              materi: `Penerapan praktik terpadu dalam menghasilkan karya/produk pada ${hasilEkstrak.topik2}`,
+              pengayaan: `Pengayaan Kontekstual: Menggabungkan tahapan persiapan dan eksekusi menjadi satu rangkaian kerja utuh sesuai standar kerapian.`,
+              konteks: "praktik langsung di bengkel/ruang keterampilan sekolah",
+              jp: "16 JP"
+            },
+            {
+              kko: "Membiasakan dan Mengadaptasi",
+              taksonomi: "Bloom: C4/A4 (Mengorganisasi) | SOLO: Extended Abstract",
+              materi: `Kemandirian vokasi, penyajian hasil karya, dan refleksi diri pada ${hasilEkstrak.topik3}`,
+              pengayaan: `Pengayaan Kemandirian & Wirausaha: Pengemasan sederhana, higienitas, etika melayani/berkomunikasi, dan pembiasaan dalam kehidupan sehari-hari.`,
+              konteks: "unjuk kerja mandiri dan portofolio kegiatan harian",
+              jp: "14 JP"
+            }
+          ];
+        } else if (isSMK) {
+          // Pengembangan KKO Vokasi & Industri (Bloom C2-C6 & SOLO Unistruktural - Extended Abstract)
+          dataAnalisis = [
+            {
+              kko: "Menjelaskan dan Mengklasifikasikan",
+              taksonomi: "Bloom: C2 (Memahami) | SOLO: Unistruktural",
+              materi: `Konsep fundamental, terminologi teknis, dan standar operasional (SOP/K3LH) pada ${hasilEkstrak.topik1}`,
+              pengayaan: `Pengayaan Referensi Industri: Regulasi keselamatan kerja (K3LH), standar mutu ISO/SKKNI relevan, dan pengenalan ekosistem kerja profesional.`,
+              konteks: "kajian literatur teknis dan observasi lingkungan kerja/bengkel",
+              jp: "10 JP"
+            },
+            {
+              kko: "Mengidentifikasi dan Menguraikan",
+              taksonomi: "Bloom: C2-C3 (Memahami-Menerapkan) | SOLO: Multistruktural",
+              materi: `Spesifikasi perangkat, komponen sistem, dan alur proses kerja pada ${hasilEkstrak.topik1}`,
+              pengayaan: `Pengayaan Teknis: Pemetaan kebutuhan alat dan bahan, pembacaan spesifikasi teknis/brief kerja, serta persiapan instrumen produksi.`,
+              konteks: "eksplorasi perangkat kerja dan bedah dokumen spesifikasi teknis",
+              jp: "12 JP"
+            },
+            {
+              kko: "Menganalisis dan Mendiagnosis",
+              taksonomi: "Bloom: C4 (Menganalisis) | SOLO: Relasional",
+              materi: `Keterkaitan antar-variabel teknis, efisiensi kerja, serta troubleshooting pada ${hasilEkstrak.topik2}`,
+              pengayaan: `Pengayaan Studi Kasus: Analisis kegagalan proses produksi, perbandingan metode kerja efektif, dan pemecahan kendala teknis lapangan.`,
+              konteks: "studi kasus masalah industri dan pengujian parameter kerja",
+              jp: "14 JP"
+            },
+            {
+              kko: "Merancang dan Mengonstruksi",
+              taksonomi: "Bloom: C5-C6 (Mengevaluasi-Mencipta) | SOLO: Relasional",
+              materi: `Perencanaan desain solusi, purwarupa (prototype), dan produksi karya pada ${hasilEkstrak.topik2}`,
+              pengayaan: `Pengayaan Manajemen Proyek: Penyusunan timeline kerja, estimasi biaya/sumber daya, serta eksekusi produksi berbasis proyek riil (PjBL).`,
+              konteks: "praktik produksi berbasis proyek (Project-Based Learning)",
+              jp: "18 JP"
+            },
+            {
+              kko: "Mengevaluasi dan Menguji",
+              taksonomi: "Bloom: C5 (Mengevaluasi) | SOLO: Extended Abstract",
+              materi: `Uji kelayakan kualitas (Quality Control), kesesuaian brief/klien, dan aspek etika/HAKI pada ${hasilEkstrak.topik3}`,
+              pengayaan: `Pengayaan Standar Mutu: Audit hasil karya menggunakan rubrik industri, kepatuhan Hak Kekayaan Intelektual (HAKI), dan perbaikan berkelanjutan.`,
+              konteks: "pengujian kualitas produk dan peer-review berstandar industri",
+              jp: "12 JP"
+            },
+            {
+              kko: "Mengembangkan dan Mempresentasikan",
+              taksonomi: "Bloom: C6 (Mencipta) | SOLO: Extended Abstract",
+              materi: `Finalisasi portofolio profesional, komunikasi bisnis, dan inovasi pengembangan pada ${hasilEkstrak.topik3}`,
+              pengayaan: `Pengayaan Kewirausahaan & Karier: Strategi pemasaran produk/jasa, penyusunan portofolio digital, dan simulasi pitching di hadapan mitra industri.`,
+              konteks: "gelar karya, presentasi portofolio, dan evaluasi komprehensif",
+              jp: "12 JP"
+            }
+          ];
+        } else {
+          // Pengembangan KKO Akademik & Analitis SMA (Bloom C2-C6 & SOLO Unistruktural - Extended Abstract)
+          dataAnalisis = [
+            {
+              kko: "Mendeskripsikan dan Mengidentifikasi",
+              taksonomi: "Bloom: C1-C2 (Mengingat-Memahami) | SOLO: Unistruktural",
+              materi: `Definisi konseptual, fakta dasar, dan elemen-elemen penyusun ${hasilEkstrak.topik1}`,
+              pengayaan: `Pengayaan Konseptual: Penelusuran latar belakang keilmuan, terminologi kunci, serta identifikasi fenomena dasar dalam kehidupan sehari-hari.`,
+              konteks: "eksplorasi literatur ilmiah dan pengamatan fenomena kontekstual",
+              jp: "8 JP"
+            },
+            {
+              kko: "Mengklasifikasikan dan Membandingkan",
+              taksonomi: "Bloom: C2 (Memahami) | SOLO: Multistruktural",
+              materi: `Karakteristik, struktur, dan ragam kategori dalam ${hasilEkstrak.topik1}`,
+              pengayaan: `Pengayaan Taksonomi & Struktur: Pemetaan persamaan dan perbedaan antar-konsep, penyusunan peta konsep, serta studi komparasi data.`,
+              konteks: "diskusi kolaboratif dan penyusunan matriks perbandingan konsep",
+              jp: "10 JP"
+            },
+            {
+              kko: "Menerapkan dan Menginterpretasikan",
+              taksonomi: "Bloom: C3 (Menerapkan) | SOLO: Multistruktural",
+              materi: `Prinsip kerja, mekanisme proses, dan pengolahan data terkait ${hasilEkstrak.topik2}`,
+              pengayaan: `Pengayaan Empiris: Penerapan rumus/prinsip keilmuan dalam simulasi, pembacaan grafik/tabel data, dan pembuktian konsep secara sistematis.`,
+              konteks: "penyelidikan terstruktur, simulasi, dan pengolahan data empiris",
+              jp: "12 JP"
+            },
+            {
+              kko: "Menganalisis dan Menelaah",
+              taksonomi: "Bloom: C4 (Menganalisis) | SOLO: Relasional",
+              materi: `Hubungan sebab-akibat, dinamika interaksi, dan faktor pemicu persoalan pada ${hasilEkstrak.topik2}`,
+              pengayaan: `Pengayaan Isu Kontemporer: Analisis dampak perubahan variabel terhadap sistem secara keseluruhan serta kajian isu global dan lokal terkini.`,
+              konteks: "analisis studi kasus mendalam dan pemecahan masalah (PBL)",
+              jp: "12 JP"
+            },
+            {
+              kko: "Mengevaluasi dan Mengkritisi",
+              taksonomi: "Bloom: C5 (Mengevaluasi) | SOLO: Relasional-Extended",
+              materi: `Validitas argumen, efektivitas alternatif pemecahan masalah, dan dampak etis/sosial pada ${hasilEkstrak.topik3}`,
+              pengayaan: `Pengayaan Berpikir Kritis: Penilaian kelayakan berbagai solusi berbasis bukti ilmiah, mitigasi risiko, dan pengambilan keputusan yang bertanggung jawab.`,
+              konteks: "debat ilmiah, telaah jurnal/artikel, dan evaluasi berbasis kriteria",
+              jp: "10 JP"
+            },
+            {
+              kko: "Merancang dan Mengomunikasikan",
+              taksonomi: "Bloom: C6 (Mencipta) | SOLO: Extended Abstract",
+              materi: `Gagasan solusi inovatif, produk proyek terapan, dan publikasi ilmiah terkait ${hasilEkstrak.topik3}`,
+              pengayaan: `Pengayaan Kreativitas & Kearifan Lokal: Sintesis seluruh konsep untuk menciptakan model/purwarupa/rekomendasi kebijakan berbasis kearifan lokal.`,
+              konteks: "perancangan proyek inovatif (PjBL) dan presentasi karya ilmiah",
+              jp: "14 JP"
+            }
+          ];
+        }
+
+        // Tampilkan Bagian I: Stagger 1 (Dekonstruksi KKO Bloom & SOLO + Submateri Diperkaya)
+        const tbodyS1 = document.getElementById('tbodyStagger1');
+        tbodyS1.innerHTML = '';
+        dataAnalisis.forEach((item, idx) => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td style="text-align: center; font-weight: bold;">${idx + 1}</td>
+            <td>
+              <b>${item.kko}</b><br>
+              <span style="display: inline-block; margin-top: 4px; padding: 2px 6px; background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 4px; font-size: 10px; color: #1e3a8a; font-weight: bold;">
+                ${item.taksonomi}
+              </span>
+            </td>
+            <td>
+              <b>Submateri Inti:</b> ${item.materi}<br>
+              <span style="color: #0f766e; font-size: 11px;"><b>Pengayaan Materi:</b> ${item.pengayaan}</span><br>
+              <span style="color: #475569; font-size: 11px;"><i>Indikator Pengamatan: Melalui ${item.konteks}</i></span>
+            </td>
+          `;
+          tbodyS1.appendChild(tr);
+        });
+
+        // Tampilkan Bagian II: Stagger 2 (Rumusan TP Komprehensif - Memuat Kompetensi & Lingkup Materi)
+        const ulS2 = document.getElementById('ulStagger2');
+        ulS2.innerHTML = '';
+        const listTP = [];
+        dataAnalisis.forEach((item, idx) => {
+          const kode = `TP.0${idx + 1}`;
+          const lingkupMateri = item.materi.charAt(0).toLowerCase() + item.materi.slice(1);
+          // Rumusan lengkap untuk Stagger 2
+          const rumusanLengkap = `Peserta didik mampu ${item.kko.toLowerCase()} ${lingkupMateri} melalui ${item.konteks} secara sistematis dan terukur.`;
+          // Rumusan fokus CP untuk Stagger 3 (Sesuai Prinsip ke-4: Fokus pada CP, tanpa mencantumkan strategi pedagogi secara detail)
+          const rumusanFokusCP = `Peserta didik mampu ${item.kko.toLowerCase()} ${lingkupMateri} secara tepat dan tuntas.`;
+
+          listTP.push({
+            kode,
+            rumusanLengkap,
+            rumusanFokusCP,
+            taksonomi: item.taksonomi,
+            jp: item.jp
+          });
+
+          const li = document.createElement('li');
+          li.style.marginBottom = '8px';
+          li.innerHTML = `<b>${kode}</b> <span style="font-size: 11px; color: #1e3a8a;">[${item.taksonomi}]</span>: ${rumusanLengkap}`;
+          ulS2.appendChild(li);
+        });
+
+        // Terapkan Teknik Pengurutan ATP untuk menyusun ulang (Re-order) TP menjadi ATP Linear
+        document.getElementById('lblTeknikATP').innerText = infoTeknik.nama;
+        document.getElementById('lblRasionalTeknikATP').innerText = infoTeknik.rasional;
+
+        const polaUrutan = listTP.length === 5 ? infoTeknik.urutan5 : infoTeknik.urutan6;
+        const daftarATPTerurut = polaUrutan.map(idx => listTP[idx]).filter(Boolean);
+
+        // Tampilkan Bagian III: Stagger 3 (ATP Linear Berdasarkan Teknik & 4 Prinsip Penyusunan ATP)
+        const tbodyS3 = document.getElementById('tbodyStagger3');
+        tbodyS3.innerHTML = '';
+        let totalJP = 0;
+        daftarATPTerurut.forEach((item, idx) => {
+          const angkaJP = parseInt(item.jp) || 10;
+          totalJP += angkaJP;
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td style="text-align: center; font-weight: bold;">Langkah ${idx + 1}</td>
+            <td style="text-align: center; font-weight: bold; color: #1e3a8a;">${item.kode}</td>
+            <td>
+              ${item.rumusanFokusCP}<br>
+              <span style="font-size: 10px; color: #475569;"><i>Target Capaian: ${item.taksonomi}</i></span>
+            </td>
+            <td style="text-align: center; font-weight: bold;">${item.jp}</td>
+          `;
+          tbodyS3.appendChild(tr);
+        });
+
+        // Baris Total Alokasi JP (Prinsip 2: Tuntas Satu Fase)
+        const trTotal = document.createElement('tr');
+        trTotal.style.backgroundColor = '#f8fafc';
+        trTotal.innerHTML = `
+          <td colspan="3" style="text-align: right; font-weight: bold;">Total Estimasi Alokasi Waktu (Tuntas Satu Fase):</td>
+          <td style="text-align: center; font-weight: bold;">${totalJP} JP</td>
+        `;
+        tbodyS3.appendChild(trTotal);
+
+        // Isi Data Kop Dokumen
+        const profil = penggunaAktif || { nama: "Guru Pengampu", nip: "-", sekolah: "Satuan Pendidikan" };
+        const inputTempatTanggal = document.getElementById('genInputTempatTanggal').value.trim();
+        document.getElementById('lblDocNama').innerText = profil.nama;
+        document.getElementById('lblDocSekolah').innerText = profil.sekolah;
+        document.getElementById('lblDocMapel').innerText = mapel;
+        document.getElementById('lblDocFase').innerText = fase;
+        document.getElementById('lblDocLokasi').innerText = inputTempatTanggal || '......................., .............................. 2026';
+        document.getElementById('lblDocTtdNama').innerText = profil.nama;
+        document.getElementById('lblDocTtdNip').innerText = profil.nip || '-';
+
+        // Tampilkan Kotak Dokumen
+        document.getElementById('kotakHasilPerencanaan').style.display = 'block';
+        btn.innerText = 'Jalankan Generator CP & ATP (Multi-Stagger Pipeline)';
+        btn.style.opacity = '1';
+
+        tampilkanToast(`ATP disusun menggunakan teknik "${infoTeknik.nama}"!`, 'success');
+        document.getElementById('kotakHasilPerencanaan').scrollIntoView({ behavior: 'smooth' });
+      }, 500);
+    }
+
+    // Unduh Dokumen Word (.doc)
+    function unduhBerkasWord() {
+      const konten = document.getElementById('areaCetakDokumen').innerHTML;
+      const htmlWord = `
+        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+        <head>
+          <meta charset='utf-8'>
+          <title>Perencanaan CP dan ATP</title>
+          <style>
+            body { font-family: 'Times New Roman', serif; font-size: 12pt; line-height: 1.4; }
+            h2, h3 { text-align: center; margin: 0; }
+            table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+            table, th, td { border: 1px solid black; }
+            th { background-color: #f2f2f2; font-weight: bold; }
+            th, td { padding: 6px; }
+            .meta-grid, .meta-grid td { border: none !important; }
+          </style>
+        </head>
+        <body>
+          ${konten}
+        </body>
+        </html>
+      `;
+      const blob = new Blob(['\ufeff', htmlWord], { type: 'application/msword' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Perencanaan_CP_ATP_${(document.getElementById('genInputMapel').value || 'Mapel').replace(/\s+/g, '_')}.doc`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      tampilkanToast('Dokumen Word (.doc) berhasil diunduh!');
+    }
+
+    // Unduh File Mandiri (.html) untuk Mode Offline Tanpa Kuota
+    function unduhAplikasiOffline() {
+      const fullHtml = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+      const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'CP_Generator_Kurikulum_Merdeka_Offline.html';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      tampilkanToast('Aplikasi berhasil disimpan! Anda dapat membukanya di laptop kapan pun tanpa internet.');
+    }
+
+    // Inisialisasi awal saat halaman dibuka
+    tampilkanHalaman('viewLogin');
+  </script>
+</body>
+</html>
