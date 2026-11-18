@@ -487,6 +487,30 @@
       to { transform: translateX(0); opacity: 1; }
     }
 
+    /* MODAL KONFIRMASI HAPUS (NON-NATIVE) */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background-color: rgba(15, 23, 42, 0.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1500;
+      padding: 16px;
+    }
+    .modal-backdrop.active {
+      display: flex;
+    }
+    .modal-box {
+      background: #ffffff;
+      border-radius: 12px;
+      max-width: 420px;
+      width: 100%;
+      padding: 22px;
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--border-light);
+    }
+
     /* PRINT RULES */
     @media print {
       body * { visibility: hidden; }
@@ -743,6 +767,43 @@
         </div>
       </div>
 
+      <!-- MENU DAFTAR REKAP GURU TERDAFTAR -->
+      <div class="card">
+        <div class="card-header">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--kemdikbud-blue);">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            <span>Daftar Rekap Guru Terdaftar</span>
+            <span id="badgeJumlahGuru" class="badge badge-blue">0 Guru</span>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <input type="text" id="cariRekapGuru" class="form-input" style="padding: 6px 10px; font-size: 12px; width: 220px;" placeholder="Cari nama, sekolah, atau mapel..." oninput="renderTabelRekapGuru()">
+          </div>
+        </div>
+        <div class="card-body" style="padding: 0; overflow-x: auto;">
+          <table class="table-formal" style="margin: 0; border: none;">
+            <thead>
+              <tr>
+                <th style="width: 45px; text-align: center; border-top: none; border-left: none;">No</th>
+                <th style="border-top: none;">Nama Guru &amp; NIP</th>
+                <th style="border-top: none;">Satuan Pendidikan</th>
+                <th style="width: 85px; text-align: center; border-top: none;">Jenjang</th>
+                <th style="border-top: none;">Mata Pelajaran</th>
+                <th style="border-top: none;">Surel belajar.id</th>
+                <th style="width: 145px; text-align: center; border-top: none; border-right: none;">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyRekapGuru">
+              <!-- Diisi otomatis oleh JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- HAK CIPTA (COPYRIGHT) DI LAMAN DASHBOARD -->
       <div style="margin-top: 20px; padding: 14px 20px; background: #ffffff; border: 1px solid var(--border-light); border-radius: var(--radius); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; font-size: 12px; color: var(--text-muted);">
         <div style="display: flex; align-items: center; gap: 8px;">
@@ -958,9 +1019,25 @@
   <!-- WADAH TOAST NOTIFIKASI -->
   <div id="toastTray" class="toast-tray no-print"></div>
 
+  <!-- MODAL KONFIRMASI HAPUS DATA GURU -->
+  <div id="modalKonfirmasiHapus" class="modal-backdrop no-print">
+    <div class="modal-box">
+      <h3 style="font-size: 16px; font-weight: 700; color: var(--danger); margin-bottom: 8px;">Konfirmasi Hapus Data Guru</h3>
+      <p id="teksKonfirmasiHapus" style="font-size: 13px; color: var(--text-main); margin-bottom: 18px;">
+        Apakah Anda yakin ingin menghapus data guru ini dari daftar rekap?
+      </p>
+      <div style="display: flex; justify-content: flex-end; gap: 10px;">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="tutupModalHapus()">Batal</button>
+        <button type="button" class="btn btn-danger btn-sm" onclick="eksekusiHapusGuru()">Ya, Hapus Data</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // State Pengguna Aktif & Data Akun Tersimpan di Perangkat
     let penggunaAktif = null;
+    let emailSedangDiedit = null;
+    let emailAkanDihapus = null;
 
     // Membaca daftar akun guru terdaftar dari localStorage
     function dapatkanAkunTersimpan() {
@@ -1035,6 +1112,7 @@
       document.querySelectorAll('.nav-tab').forEach(btn => btn.classList.remove('active'));
       if (idTarget === 'viewDashboard') {
         document.getElementById('tabBtnDashboard').classList.add('active');
+        renderTabelRekapGuru();
       } else if (idTarget === 'viewGenerator') {
         document.getElementById('tabBtnGenerator').classList.add('active');
       }
@@ -1057,6 +1135,7 @@
       document.getElementById('navBarUtama').style.display = 'flex';
 
       // Sinkronkan ke form Dashboard
+      emailSedangDiedit = dataGuru.email;
       document.getElementById('inpNama').value = dataGuru.nama || '';
       document.getElementById('inpNip').value = dataGuru.nip || '';
       document.getElementById('inpSekolah').value = dataGuru.sekolah || '';
@@ -1072,6 +1151,7 @@
         document.getElementById('genInputFase').value = 'Fase E (Kelas 10 SMA/SMK)';
       }
 
+      renderTabelRekapGuru();
       tampilkanHalaman('viewDashboard');
     }
 
@@ -1149,22 +1229,152 @@
     function simpanPerubahanProfil() {
       if (!penggunaAktif) return;
 
-      penggunaAktif.nama = document.getElementById('inpNama').value.trim();
-      penggunaAktif.nip = document.getElementById('inpNip').value.trim();
-      penggunaAktif.sekolah = document.getElementById('inpSekolah').value.trim();
-      penggunaAktif.jenjang = document.getElementById('inpJenjang').value;
-      penggunaAktif.mapel = document.getElementById('inpMapel').value.trim();
+      const targetEmail = emailSedangDiedit || penggunaAktif.email;
+      const namaBaru = document.getElementById('inpNama').value.trim();
+      const nipBaru = document.getElementById('inpNip').value.trim();
+      const sekolahBaru = document.getElementById('inpSekolah').value.trim();
+      const jenjangBaru = document.getElementById('inpJenjang').value;
+      const mapelBaru = document.getElementById('inpMapel').value.trim();
 
       const daftarAkun = dapatkanAkunTersimpan();
-      const idx = daftarAkun.findIndex(a => a.email === penggunaAktif.email);
+      const idx = daftarAkun.findIndex(a => a.email === targetEmail);
       if (idx >= 0) {
-        daftarAkun[idx] = penggunaAktif;
+        daftarAkun[idx].nama = namaBaru;
+        daftarAkun[idx].nip = nipBaru;
+        daftarAkun[idx].sekolah = sekolahBaru;
+        daftarAkun[idx].jenjang = jenjangBaru;
+        daftarAkun[idx].mapel = mapelBaru;
         simpanDaftarAkun(daftarAkun);
       }
 
-      document.getElementById('hdrNamaGuru').innerText = penggunaAktif.nama;
-      document.getElementById('genInputMapel').value = penggunaAktif.mapel;
-      tampilkanToast('Data identitas guru berhasil diperbarui dan disinkronkan!', 'success');
+      // Jika yang diedit adalah pengguna yang sedang login, perbarui sesi aktif
+      if (targetEmail === penggunaAktif.email) {
+        penggunaAktif.nama = namaBaru;
+        penggunaAktif.nip = nipBaru;
+        penggunaAktif.sekolah = sekolahBaru;
+        penggunaAktif.jenjang = jenjangBaru;
+        penggunaAktif.mapel = mapelBaru;
+        document.getElementById('hdrNamaGuru').innerText = penggunaAktif.nama;
+        document.getElementById('genInputMapel').value = penggunaAktif.mapel;
+      }
+
+      renderTabelRekapGuru();
+      tampilkanToast(`Data guru (${namaBaru}) berhasil disimpan & diperbarui!`, 'success');
+    }
+
+    // Render Tabel Daftar Rekap Guru Terdaftar
+    function renderTabelRekapGuru() {
+      const tbody = document.getElementById('tbodyRekapGuru');
+      const badge = document.getElementById('badgeJumlahGuru');
+      const inputCari = document.getElementById('cariRekapGuru');
+      if (!tbody) return;
+
+      const kataKunci = inputCari ? inputCari.value.trim().toLowerCase() : '';
+      const semuaAkun = dapatkanAkunTersimpan();
+      if (badge) badge.innerText = `${semuaAkun.length} Guru`;
+
+      const hasilFilter = semuaAkun.filter(g => {
+        if (!kataKunci) return true;
+        return (g.nama || '').toLowerCase().includes(kataKunci) ||
+               (g.sekolah || '').toLowerCase().includes(kataKunci) ||
+               (g.mapel || '').toLowerCase().includes(kataKunci) ||
+               (g.email || '').toLowerCase().includes(kataKunci);
+      });
+
+      tbody.innerHTML = '';
+      if (hasilFilter.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" style="text-align: center; padding: 20px; color: var(--text-muted); border-left: none; border-right: none;">
+              Belum ada data guru terdaftar yang sesuai pencarian.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      hasilFilter.forEach((guru, idx) => {
+        const sedangAktif = penggunaAktif && penggunaAktif.email === guru.email;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="text-align: center; border-left: none;">${idx + 1}</td>
+          <td>
+            <strong>${guru.nama}</strong>
+            ${sedangAktif ? '<span class="badge badge-teal" style="margin-left: 4px;">Aktif</span>' : ''}
+            <div style="font-size: 11px; color: var(--text-muted);">NIP: ${guru.nip || '-'}</div>
+          </td>
+          <td>${guru.sekolah || '-'}</td>
+          <td style="text-align: center;"><span class="badge badge-blue">${guru.jenjang || 'SMA'}</span></td>
+          <td>${guru.mapel || '-'}</td>
+          <td style="font-size: 11px; color: var(--kemdikbud-navy);">${guru.email}</td>
+          <td style="text-align: center; border-right: none; white-space: nowrap;">
+            <button type="button" class="btn btn-primary btn-sm" onclick="editDataGuruRekap('${guru.email}')" title="Sunting data guru ini">
+              Edit
+            </button>
+            <button type="button" class="btn btn-danger btn-sm" onclick="bukaModalHapusGuru('${guru.email}')" title="Hapus guru dari rekap">
+              Hapus
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Muat data guru terpilih dari tabel rekap ke form Dashboard untuk diedit
+    function editDataGuruRekap(email) {
+      const daftarAkun = dapatkanAkunTersimpan();
+      const guru = daftarAkun.find(a => a.email === email);
+      if (!guru) return;
+
+      emailSedangDiedit = guru.email;
+      document.getElementById('inpNama').value = guru.nama || '';
+      document.getElementById('inpNip').value = guru.nip || '';
+      document.getElementById('inpSekolah').value = guru.sekolah || '';
+      document.getElementById('inpJenjang').value = guru.jenjang || 'SMA';
+      document.getElementById('inpMapel').value = guru.mapel || '';
+      document.getElementById('inpEmail').value = guru.email || '';
+
+      document.getElementById('inpNama').focus();
+      document.getElementById('viewDashboard').scrollIntoView({ behavior: 'smooth' });
+      tampilkanToast(`Mode Edit: Silakan ubah data "${guru.nama}" lalu klik Simpan Data Guru.`, 'warning');
+    }
+
+    // Buka dialog konfirmasi hapus data guru
+    function bukaModalHapusGuru(email) {
+      const daftarAkun = dapatkanAkunTersimpan();
+      const guru = daftarAkun.find(a => a.email === email);
+      if (!guru) return;
+
+      emailAkanDihapus = email;
+      document.getElementById('teksKonfirmasiHapus').innerText = `Apakah Anda yakin ingin menghapus akun "${guru.nama}" (${guru.email}) dari Daftar Rekap Guru?`;
+      document.getElementById('modalKonfirmasiHapus').classList.add('active');
+    }
+
+    function tutupModalHapus() {
+      emailAkanDihapus = null;
+      document.getElementById('modalKonfirmasiHapus').classList.remove('active');
+    }
+
+    function eksekusiHapusGuru() {
+      if (!emailAkanDihapus) return;
+
+      const daftarAkun = dapatkanAkunTersimpan();
+      const sisaAkun = daftarAkun.filter(a => a.email !== emailAkanDihapus);
+      simpanDaftarAkun(sisaAkun);
+
+      const menghapusDiriSendiri = penggunaAktif && penggunaAktif.email === emailAkanDihapus;
+      tutupModalHapus();
+
+      if (menghapusDiriSendiri) {
+        lakukanLogout();
+        tampilkanToast('Akun Anda telah dihapus dari rekap perangkat.', 'warning');
+      } else {
+        if (emailSedangDiedit === emailAkanDihapus && penggunaAktif) {
+          editDataGuruRekap(penggunaAktif.email);
+        }
+        renderTabelRekapGuru();
+        tampilkanToast('Data guru berhasil dihapus dari Daftar Rekap.', 'success');
+      }
     }
 
     // Memuat Contoh CP BSKAP untuk Pengujian Cepat
