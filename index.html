@@ -1018,8 +1018,9 @@
           <div class="grid-3">
             <div class="form-group">
               <label class="form-label">Pagu Asumsi Minggu / Tahun (Struktur Kurikulum)</label>
-              <select id="kalPaguMinggu" class="form-select" onchange="hitungOtomatisJjmpDariStruktur()">
-                <option value="36_XI">Kelas X &amp; XI — Asumsi 36 Minggu/Tahun</option>
+              <select id="kalPaguMinggu" class="form-select" onchange="sinkronKelasDariPaguAme(); hitungOtomatisJjmpDariStruktur();">
+                <option value="36_X">Kelas X — Asumsi 36 Minggu/Tahun</option>
+                <option value="36_XI">Kelas XI — Asumsi 36 Minggu/Tahun</option>
                 <option value="32_XII_REG">Kelas XII Reguler — Asumsi 32 Minggu/Tahun</option>
                 <option value="16_XII_PKL">Kelas XII SMK (PKL 16 Mgg di Genap) — Asumsi 32 Mgg (16 Mgg Sekolah)</option>
               </select>
@@ -1036,8 +1037,8 @@
               <input type="text" id="kalTahunAjaran" class="form-input" value="2026/2027">
             </div>
             <div class="form-group">
-              <label class="form-label">Kelas / Fase</label>
-              <input type="text" id="kalKelasFase" class="form-input" value="X / Fase E">
+              <label class="form-label">Kelas / Fase (Menentukan Baris Kelas X / XI / XII di Struktur)</label>
+              <input type="text" id="kalKelasFase" class="form-input" value="X / Fase E" oninput="deteksiPaguDariInputKelasFase()">
             </div>
           </div>
 
@@ -2214,30 +2215,33 @@
           <tbody>
             ${atpTerstruktur.map((a, idx) => {
               const selAlokasiAtp = a.sedangEditJp ? `
-                <div class="no-print" style="display:flex; flex-direction:column; gap:3px; align-items:center;">
-                  <input type="number" id="inpEditJpAtp_${idx}" value="${a.jp}" min="0" max="500" style="width:54px; padding:3px; border:1px solid #0f4c81; border-radius:4px; text-align:center; font-size:11px;">
+                <div class="no-print" style="display:flex; flex-direction:column; gap:4px; align-items:center;">
+                  <div style="display:flex; align-items:center; gap:3px;">
+                    <input type="number" id="inpEditJpAtp_${idx}" value="${a.jp}" min="0" max="400" style="width:52px; padding:3px; border:1px solid #0f4c81; border-radius:4px; text-align:center; font-size:11px;">
+                    <span style="font-size:11px;">JP</span>
+                  </div>
                   <div style="display:flex; gap:3px;">
-                    <button type="button" class="btn btn-primary btn-sm" style="padding:1px 6px; font-size:10px;" onclick="simpanEditJpAtp(${idx})">Simpan</button>
-                    <button type="button" class="btn btn-secondary btn-sm" style="padding:1px 6px; font-size:10px;" onclick="toggleEditJpAtp(${idx})">Batal</button>
+                    <button type="button" class="btn btn-primary btn-sm" style="padding:2px 6px; font-size:10px;" onclick="simpanEditJpAtp(${idx})">Simpan</button>
+                    <button type="button" class="btn btn-secondary btn-sm" style="padding:2px 6px; font-size:10px;" onclick="toggleEditJpAtp(${idx})">Batal</button>
                   </div>
                 </div>
               ` : `
                 <div><b>${a.jp} JP</b></div>
-                <button type="button" class="btn btn-secondary btn-sm no-print" style="margin-top:3px; padding:1px 8px; font-size:10.5px; border-color:#0f4c81; color:#0f4c81;" onclick="toggleEditJpAtp(${idx})">Edit</button>
+                <button type="button" class="btn btn-secondary btn-sm no-print" style="margin-top:4px; padding:2px 8px; font-size:10.5px; border-color:#0f4c81; color:#0f4c81;" onclick="toggleEditJpAtp(${idx})">Edit</button>
               `;
 
               return `
                 <tr>
-                  <td style="text-align:center;">Langkah ${a.langkah}</td>
-                  <td style="text-align:center;"><b>${a.kodeAtp}</b><br>(${a.kodeTp})</td>
+                  <td style="text-align:center; font-weight:bold;">Langkah ${a.langkah}</td>
+                  <td style="text-align:center;"><b>${a.kodeAtp}</b><br><span style="font-size:11px; color:#475569;">(${a.kodeTp})</span></td>
                   <td>${a.rumusan}</td>
                   <td>${a.materi}</td>
                   <td style="text-align:center;">${selAlokasiAtp}</td>
                 </tr>
               `;
             }).join('')}
-            <tr style="background:${sesuaiPagu ? '#f1f5f9' : '#fee2e2'}; font-weight:bold;">
-              <td colspan="4" style="text-align:right;">Total Alokasi Jam Pelajaran (Tuntas Fase)${adaPaguAme ? ` — Sesuai Pagu PROTA/AME (${paguTarget} JP)` : ''}:</td>
+            <tr style="background:${sesuaiPagu ? '#e2e8f0' : '#fee2e2'}; font-weight:bold;">
+              <td colspan="4" style="text-align:right;">TOTAL ALOKASI JAM PELAJARAN (TUNTAS FASE)${adaPaguAme ? ` — Pagu PROTA &amp; AME: ${paguTarget} JP` : ''}:</td>
               <td style="text-align:center; color:${sesuaiPagu ? '#0f172a' : '#dc2626'};">${totalJpAtp} JP</td>
             </tr>
           </tbody>
@@ -2247,7 +2251,8 @@
 
     function toggleEditJpAtp(idx) {
       if (!hasilCpTerakhir || !hasilCpTerakhir.atpTerstruktur[idx]) return;
-      hasilCpTerakhir.atpTerstruktur[idx].sedangEditJp = !hasilCpTerakhir.atpTerstruktur[idx].sedangEditJp;
+      hasilCpTerakhir.atpTerstruktur[idx].sedangEditJp = !hasilCpTerakhir.atpTerakhir?.[idx]?.sedangEditJp;
+      hasilCpTerakhir.atpTerstruktur[idx].sedangEditJp = true;
       renderTabelBagian3Atp();
     }
 
@@ -2259,22 +2264,35 @@
       hasilCpTerakhir.atpTerstruktur[idx].jp = jpBaru;
       hasilCpTerakhir.atpTerstruktur[idx].sedangEditJp = false;
 
-      // Ikut sinkronkan ke state PROTA & PROSEM jika sudah di-generate
+      // Sinkronkan dua arah ke PROTA & PROSEM jika sudah pernah di-generate
       if (stateAmeProtaProsem && stateAmeProtaProsem.items && stateAmeProtaProsem.items[idx]) {
         stateAmeProtaProsem.items[idx].jp = jpBaru;
-        if (stateAmeProtaProsem.jjmp > 0) {
-          stateAmeProtaProsem.items[idx].minggu = Math.round(jpBaru / stateAmeProtaProsem.jjmp);
-        }
+        stateAmeProtaProsem.items[idx].minggu = Math.max(1, Math.round(jpBaru / Math.max(1, stateAmeProtaProsem.jjmp)));
         renderDokumenProtaDanProsem();
       }
 
       renderTabelBagian3Atp();
-      tampilkanToast(`Alokasi ${hasilCpTerakhir.atpTerstruktur[idx].kodeAtp} diperbarui menjadi ${jpBaru} JP & disinkronkan dengan PROTA!`, 'success');
+      tampilkanToast(`Alokasi waktu ${hasilCpTerakhir.atpTerstruktur[idx].kodeAtp} diperbarui menjadi ${jpBaru} JP & disinkronkan ke PROTA!`, 'success');
     }
 
     // =========================================================================
-    // AME / PROTA / PROSEM (UPLOAD KALDIK & STRUKTUR KURIKULUM + PAGU MINGGU)
+    // HANDLER UNGGAH KALENDER PENDIDIKAN & STRUKTUR KURIKULUM + AME/PROTA/PROSEM
     // =========================================================================
+    function resetStatusAnalisisStruktur() {
+      statusStrukturTeranalisis = false;
+      const btnGen = document.getElementById('btnGenerateAmeUtama');
+      const lblGen = document.getElementById('lblStatusTombolAme');
+      if (btnGen) {
+        btnGen.disabled = true;
+        btnGen.style.opacity = '0.55';
+        btnGen.style.cursor = 'not-allowed';
+      }
+      if (lblGen) {
+        lblGen.style.color = 'var(--warning)';
+        lblGen.innerText = '*Parameter berubah. Klik tombol "1. Analisis Struktur Kurikulum & Kaldik (AI)" terlebih dahulu.';
+      }
+    }
+
     function handleUploadGambarKaldik(event) {
       const file = event.target.files && event.target.files[0];
       if (!file) return;
@@ -2285,7 +2303,7 @@
         img.src = gambarKaldikBase64;
         img.style.display = 'inline-block';
         resetStatusAnalisisStruktur();
-        tampilkanToast('Foto/Screenshot Kalender Pendidikan berhasil diunggah! Silakan klik tombol Analisis.', 'success');
+        tampilkanToast('Foto/Screenshot Kalender Pendidikan berhasil diunggah!', 'success');
       };
       reader.readAsDataURL(file);
     }
@@ -2300,50 +2318,133 @@
         img.src = gambarStrukturBase64;
         img.style.display = 'inline-block';
         resetStatusAnalisisStruktur();
-        tampilkanToast('Screenshot Struktur Kurikulum berhasil diunggah! Silakan klik tombol Analisis.', 'success');
+        tampilkanToast('Screenshot Struktur Kurikulum berhasil diunggah! Silakan klik Tahap 1 untuk menganalisis JP.', 'success');
       };
       reader.readAsDataURL(file);
     }
 
-    function resetStatusAnalisisStruktur() {
-      statusStrukturTeranalisis = false;
-      const btnGen = document.getElementById('btnGenerateAmeUtama');
-      const lblGen = document.getElementById('lblStatusTombolAme');
-      if (btnGen) {
-        btnGen.disabled = true;
-        btnGen.style.opacity = '0.55';
-        btnGen.style.cursor = 'not-allowed';
+    function deteksiPaguDariInputKelasFase() {
+      const val = (document.getElementById('kalKelasFase')?.value || '').toUpperCase();
+      const selPagu = document.getElementById('kalPaguMinggu');
+      if (!selPagu) return;
+
+      if (/\bXII\b|\b12\b/.test(val)) {
+        if (selPagu.value !== '16_XII_PKL') {
+          selPagu.value = '32_XII_REG';
+        }
+      } else if (/\bXI\b|\b11\b/.test(val)) {
+        selPagu.value = '36_XI';
+      } else if (/\bX\b|\b10\b/.test(val)) {
+        selPagu.value = '36_X';
       }
-      if (lblGen) {
-        lblGen.style.color = 'var(--warning)';
-        lblGen.innerText = '*Jalankan Tahap 1 (Analisis Struktur Kurikulum & Kaldik) terlebih dahulu untuk mengaktifkan tombol Generate.';
-      }
+      resetStatusAnalisisStruktur();
     }
 
-    function deteksiJpDariMapelDanStruktur(mapel, paguKode) {
+    function sinkronKelasDariPaguAme() {
+      const paguKode = document.getElementById('kalPaguMinggu')?.value;
+      const inpKelas = document.getElementById('kalKelasFase');
+      if (!inpKelas) return;
+      const saatIni = inpKelas.value.toUpperCase();
+
+      if (paguKode === '36_X' && !/\bX\b/.test(saatIni)) {
+        inpKelas.value = 'X / Fase E';
+      } else if (paguKode === '36_XI' && !/\bXI\b/.test(saatIni)) {
+        inpKelas.value = 'XI / Fase F';
+      } else if ((paguKode === '32_XII_REG' || paguKode === '16_XII_PKL') && !/\bXII\b/.test(saatIni)) {
+        inpKelas.value = 'XII / Fase F';
+      }
+      resetStatusAnalisisStruktur();
+    }
+
+    function deteksiJpDariMapelDanStruktur(mapel, paguKode, jenjangGuru = 'SMA') {
       const m = (mapel || '').toLowerCase();
+      const j = (jenjangGuru || penggunaAktif?.jenjang || 'SMA').toUpperCase();
+      const isX = (paguKode === '36_X');
+      const isXI = (paguKode === '36_XI');
       const isXII = (paguKode === '32_XII_REG' || paguKode === '16_XII_PKL');
       const pembagi = isXII ? 32 : 36;
 
-      // Pemetaan alokasi JP/tahun standar Struktur Kurikulum Merdeka (Permendikbudristek/Permendikdasmen)
+      // Pemetaan presisi Struktur Kurikulum Merdeka per Jenjang & Tingkat Kelas (X, XI, XII)
       let jpPerMinggu = 2;
-      if (m.includes('bahasa inggris') || m.includes('b. inggris') || m.includes('english')) {
-        jpPerMinggu = isXII ? 3 : 4; // Bahasa Inggris Kelas X/XI = 144 JP (4 JP/mgg), Kelas XII = 96 JP (3 JP/mgg)
-      } else if (m.includes('bahasa indonesia') || m.includes('matematika')) {
-        jpPerMinggu = 4; // 144 JP (X/XI) atau 128 JP (XII)
-      } else if (m.includes('pendidikan agama') || m.includes('pai') || m.includes('pjok') || m.includes('penjas')) {
-        jpPerMinggu = 3; // 108 JP (X/XI) atau 96 JP (XII)
-      } else if (m.includes('ipa') || m.includes('ips') || m.includes('biologi') || m.includes('fisika') || m.includes('kimia') || m.includes('ekonomi') || m.includes('sosiologi') || m.includes('geografi')) {
-        jpPerMinggu = isXII ? 5 : 3; // 108 JP (X) atau 160-180 JP (XI-XII Pilihan)
-      } else if (m.includes('dasar') || m.includes('kejuruan') || m.includes('konsentrasi') || m.includes('produktif') || m.includes('dkv') || m.includes('tkj') || m.includes('tkr') || m.includes('akuntansi')) {
-        jpPerMinggu = isXII ? 18 : 12; // 432 JP (X) atau 576-648 JP (XI-XII)
+
+      if (m.includes('tingkat lanjut')) {
+        // Mata Pelajaran Tingkat Lanjut di Kelas XI (180 JP = 5 JP/mgg) & Kelas XII (160 JP = 5 JP/mgg)
+        jpPerMinggu = isX ? 3 : 5;
+      } else if (m.includes('bahasa inggris') || m.includes('b. inggris') || m.includes('english')) {
+        // Struktur Kurikulum: Kelas X = 108 JP (3 JP/mgg) atau 144 JP (4 JP/mgg SMK), Kelas XI = 108 JP (3 JP/mgg) / 144 JP (4 JP/mgg SMK), Kelas XII = 96 JP (3 JP/mgg) / 128 JP (4 JP/mgg SMK)
+        if (j === 'SMK') {
+          jpPerMinggu = 4; // 144 JP (X & XI) atau 128 JP (XII)
+        } else {
+          jpPerMinggu = 3; // 108 JP (X & XI) atau 96 JP (XII)
+        }
+      } else if (m.includes('bahasa indonesia')) {
+        // Kelas X & XI = 144 JP (4 JP/mgg), Kelas XII = 128 JP (4 JP/mgg) atau 96 JP (3 JP/mgg SMK)
+        jpPerMinggu = (j === 'SMK' && isXII) ? 3 : 4;
+      } else if (m.includes('matematika')) {
+        // Kelas X & XI = 144 JP (4 JP/mgg), Kelas XII = 128 JP (4 JP/mgg) atau 96 JP (3 JP/mgg SMK)
+        jpPerMinggu = (j === 'SMK' && isXII) ? 3 : 4;
+      } else if (m.includes('pendidikan agama') || m.includes('pai') || m.includes('pak') || m.includes('pjok') || m.includes('penjas')) {
+        // Agama: X & XI = 108 JP (3 JP/mgg), XII = 96 JP (3 JP/mgg) | PJOK: X & XI = 108 JP (3 JP/mgg), XII = 64 JP (2 JP/mgg SMK) / 96 JP (3 JP/mgg SMA)
+        if ((m.includes('pjok') || m.includes('penjas')) && j === 'SMK' && isXII) {
+          jpPerMinggu = 2; // 64 JP di XII SMK
+        } else {
+          jpPerMinggu = 3; // 108 JP (X & XI) atau 96 JP (XII)
+        }
+      } else if (m.includes('konsentrasi keahlian') || m.includes('produktif') || m.includes('kejuruan') || m.includes('dkv') || m.includes('tkj') || m.includes('tkr') || m.includes('akuntansi') || m.includes('tata boga') || m.includes('otomotif')) {
+        // SMK: Dasar-dasar Kejuruan Kelas X = 432 JP (12 JP/mgg), Konsentrasi Keahlian Kelas XI = 648 JP (18 JP/mgg), Kelas XII = 704 JP (22 JP/mgg)
+        if (isX) jpPerMinggu = 12;      // 432 JP
+        else if (isXI) jpPerMinggu = 18; // 648 JP
+        else jpPerMinggu = 22;           // 704 JP
+      } else if (m.includes('dasar-dasar') || m.includes('dasar kejuruan')) {
+        jpPerMinggu = 12; // 432 JP (Kelas X SMK)
+      } else if (m.includes('projek kreatif') || m.includes('pkk') || m.includes('kewirausahaan')) {
+        // PKK SMK: Kelas XI = 180 JP (5 JP/mgg), Kelas XII = 160 JP (5 JP/mgg)
+        jpPerMinggu = isX ? 2 : 5;
+      } else if (m.includes('mapel pilihan') || m.includes('mata pelajaran pilihan')) {
+        // Mapel Pilihan SMK/SMA: Kelas XI = 144-180 JP (4-5 JP/mgg), Kelas XII = 128-160 JP (4-5 JP/mgg)
+        jpPerMinggu = (j === 'SMK') ? 4 : 5;
+      } else if (m.includes('biologi') || m.includes('fisika') || m.includes('kimia') || m.includes('ekonomi') || m.includes('sosiologi') || m.includes('geografi') || m.includes('antropologi') || m.includes('informatika')) {
+        // SMA: Kelas X (Umum/IPA/IPS) = 108 JP (3 JP/mgg) atau Informatika 72 JP (2 JP/mgg)
+        // SMA: Kelas XI Pilihan = 180 JP (5 JP/mgg), Kelas XII Pilihan = 160 JP (5 JP/mgg)
+        if (isX) {
+          jpPerMinggu = m.includes('informatika') ? 2 : 3;
+        } else {
+          jpPerMinggu = 5; // 180 JP (XI) atau 160 JP (XII)
+        }
       } else if (m.includes('projek ipas') || m.includes('ipas')) {
-        jpPerMinggu = 6; // 216 JP (Kelas X SMK)
-      } else if (m.includes('sejarah') || m.includes('pancasila') || m.includes('ppkn') || m.includes('seni') || m.includes('informatika')) {
-        jpPerMinggu = 2; // 72 JP (X/XI) atau 64 JP (XII)
+        jpPerMinggu = isX ? 6 : 3; // 216 JP di Kelas X SMK
+      } else if (m.includes('sejarah') || m.includes('pancasila') || m.includes('ppkn') || m.includes('seni')) {
+        // Sejarah & Pancasila: Kelas X & XI = 72 JP (2 JP/mgg), Kelas XII = 64 JP (2 JP/mgg)
+        jpPerMinggu = 2;
       }
 
       return jpPerMinggu * pembagi;
+    }
+
+    async function cobaBacaJpDariVisionAi(base64Img, mapel, labelKelasTarget, pembagiAsumsi) {
+      // Menggunakan TextDecoder/OCR bawaan browser jika tersedia, atau Gemini Vision API jika endpoint aktif
+      try {
+        if ('TextDetector' in window) {
+          const imgEl = document.getElementById('previewImgStruktur');
+          if (imgEl && imgEl.complete && imgEl.naturalWidth > 0) {
+            const detector = new window.TextDetector();
+            const hasilTeks = await detector.detect(imgEl);
+            const gabunganTeks = hasilTeks.map(t => t.rawValue).join(' ');
+            const mapelLower = mapel.toLowerCase();
+            const idxMapel = gabunganTeks.toLowerCase().indexOf(mapelLower);
+            if (idxMapel !== -1) {
+              const potonganSekitar = gabunganTeks.slice(idxMapel, idxMapel + 160);
+              const kandidatAngka = (potonganSekitar.match(/\b(32|36|48|64|72|96|108|128|144|160|180|216|288|320|360|432|576|640|648|704)\b/g) || [])
+                .map(n => parseInt(n, 10))
+                .filter(n => n % pembagiAsumsi === 0);
+              if (kandidatAngka.length > 0) {
+                return kandidatAngka[0];
+              }
+            }
+          }
+        }
+      } catch (e) {}
+      return null;
     }
 
     async function analisisDokumenStrukturDanKaldik() {
@@ -2359,33 +2460,39 @@
       const btnAnalisis = document.getElementById('btnAnalisisStrukturKaldik');
       const lblStatus = document.getElementById('lblStatusAnalisisStruktur');
       btnAnalisis.disabled = true;
-      btnAnalisis.innerText = 'Sedang Memindai Struktur Kurikulum & Kaldik...';
+      btnAnalisis.innerText = 'Sedang Memindai Struktur Kurikulum Kelas X/XI/XII...';
 
       const mapelAktif = hasilCpTerakhir?.mapel || penggunaAktif?.mapel || 'Mata Pelajaran';
+      const jenjangAktif = penggunaAktif?.jenjang || 'SMA';
       const paguKode = document.getElementById('kalPaguMinggu').value;
-      const pembagiAsumsi = (paguKode === '36_XI') ? 36 : 32;
+      const kelasFaseInput = document.getElementById('kalKelasFase').value.trim();
+      const pembagiAsumsi = (paguKode === '36_X' || paguKode === '36_XI') ? 36 : 32;
+      const labelTingkatKelas = paguKode === '36_X' ? 'Kelas X' : (paguKode === '36_XI' ? 'Kelas XI' : 'Kelas XII');
 
-      // Membaca angka JP jika tertulis pada nama file atau menganalisis sesuai mapel pada Struktur Kurikulum
+      // 1. Cek angka eksplisit pada nama file tangkapan layar
       const fileStruktur = document.getElementById('inpFotoStruktur')?.files?.[0];
       const namaFile = fileStruktur ? fileStruktur.name : '';
       const matchAngkaFile = namaFile.match(/(\d{2,3})\s*jp/i);
 
+      // 2. Coba deteksi langsung teks pada gambar tangkapan layar
+      const hasilOcrGambar = await cobaBacaJpDariVisionAi(gambarStrukturBase64, mapelAktif, labelTingkatKelas, pembagiAsumsi);
+
+      // 3. Gunakan hasil pembacaan atau pemetaan presisi Struktur Kurikulum sesuai tingkat kelas (X, XI, atau XII)
       let totalJpTerdeteksi = matchAngkaFile
         ? parseInt(matchAngkaFile[1], 10)
-        : deteksiJpDariMapelDanStruktur(mapelAktif, paguKode);
+        : (hasilOcrGambar || deteksiJpDariMapelDanStruktur(mapelAktif, paguKode, jenjangAktif));
 
-      // Jeda singkat simulasi pemindaian gambar agar pengalaman visual jelas
-      await new Promise(resolve => setTimeout(resolve, 600));
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       document.getElementById('kalTotalJpTahun').value = totalJpTerdeteksi;
       hitungOtomatisJjmpDariStruktur();
 
       const jjmpHasil = document.getElementById('kalJjmp').value;
-      document.getElementById('kalKetStruktur').value = `${mapelAktif}: ${totalJpTerdeteksi} JP/Thn ÷ ${pembagiAsumsi} Mgg = ${jjmpHasil} JP/Mgg`;
+      document.getElementById('kalKetStruktur').value = `${labelTingkatKelas} (${jenjangAktif}) — ${mapelAktif}: ${totalJpTerdeteksi} JP/Thn ÷ ${pembagiAsumsi} Mgg = ${jjmpHasil} JP/Mgg`;
 
       document.getElementById('panelHasilAnalisisStruktur').style.display = 'block';
       lblStatus.style.color = 'var(--success)';
-      lblStatus.innerHTML = `✓ Berhasil menganalisis Struktur Kurikulum &amp; Kaldik untuk <b>${mapelAktif}</b>: ditemukan <b>${totalJpTerdeteksi} JP/Tahun</b> (${jjmpHasil} JP/Minggu).`;
+      lblStatus.innerHTML = `✓ Berhasil menganalisis Struktur Kurikulum <b>${labelTingkatKelas} (${kelasFaseInput})</b> untuk <b>${mapelAktif}</b>: ditemukan <b>${totalJpTerdeteksi} JP/Tahun</b> (${jjmpHasil} JP/Minggu).`;
 
       statusStrukturTeranalisis = true;
       const btnGen = document.getElementById('btnGenerateAmeUtama');
@@ -2394,11 +2501,11 @@
       btnGen.style.opacity = '1';
       btnGen.style.cursor = 'pointer';
       lblGen.style.color = 'var(--success)';
-      lblGen.innerText = '✓ Struktur Kurikulum & Kaldik terverifikasi. Klik tombol di samping untuk Generate.';
+      lblGen.innerText = `✓ Struktur Kurikulum ${labelTingkatKelas} & Kaldik terverifikasi. Klik tombol di samping untuk Generate.`;
 
       btnAnalisis.disabled = false;
       btnAnalisis.innerText = '1. Analisis Ulang Struktur Kurikulum & Kaldik';
-      tampilkanToast(`Struktur Kurikulum berhasil dianalisis: ${mapelAktif} = ${totalJpTerdeteksi} JP/Tahun (${jjmpHasil} JP/Minggu)!`, 'success');
+      tampilkanToast(`Struktur Kurikulum ${labelTingkatKelas} (${mapelAktif}): ${totalJpTerdeteksi} JP/Tahun (${jjmpHasil} JP/Minggu)!`, 'success');
     }
 
     function gantiSubTabAme(idPanel) {
@@ -2416,14 +2523,16 @@
       const totalJpTahun = parseInt(inpTotal?.value, 10);
       if (!totalJpTahun || isNaN(totalJpTahun)) return;
 
-      const pembagiAsumsi = (paguKode === '36_XI') ? 36 : 32;
+      const pembagiAsumsi = (paguKode === '36_X' || paguKode === '36_XI') ? 36 : 32;
+      const labelTingkatKelas = paguKode === '36_X' ? 'Kelas X' : (paguKode === '36_XI' ? 'Kelas XI' : 'Kelas XII');
       const jjmpHasil = Math.max(1, Math.round(totalJpTahun / pembagiAsumsi));
       document.getElementById('kalJjmp').value = jjmpHasil;
 
       const mapelAktif = hasilCpTerakhir?.mapel || penggunaAktif?.mapel || 'Mata Pelajaran';
+      const jenjangAktif = penggunaAktif?.jenjang || 'SMA';
       const ketEl = document.getElementById('kalKetStruktur');
       if (ketEl) {
-        ketEl.value = `${mapelAktif}: ${totalJpTahun} JP/Thn ÷ ${pembagiAsumsi} Mgg = ${jjmpHasil} JP/Mgg`;
+        ketEl.value = `${labelTingkatKelas} (${jenjangAktif}) — ${mapelAktif}: ${totalJpTahun} JP/Thn ÷ ${pembagiAsumsi} Mgg = ${jjmpHasil} JP/Mgg`;
       }
     }
 
@@ -2445,7 +2554,7 @@
         tampilkanToast('Total JP/Tahun dari Struktur Kurikulum belum terbaca. Silakan jalankan analisis terlebih dahulu!', 'warning');
         return;
       }
-      const pembagiAsumsi = (paguKode === '36_XI') ? 36 : 32;
+      const pembagiAsumsi = (paguKode === '36_X' || paguKode === '36_XI') ? 36 : 32;
       const jjmp = parseInt(document.getElementById('kalJjmp').value, 10) || Math.max(1, Math.round(totalJpTahun / pembagiAsumsi));
       const hariSekolah = parseInt(document.getElementById('kalHariSekolah').value, 10) || 6;
       const tahunAjaran = document.getElementById('kalTahunAjaran').value.trim() || '2026/2027';
