@@ -2371,24 +2371,40 @@
         // Mata Pelajaran Tingkat Lanjut di Kelas XI (180 JP = 5 JP/mgg) & Kelas XII (160 JP = 5 JP/mgg)
         jpPerMinggu = isX ? 3 : 5;
       } else if (m.includes('bahasa inggris') || m.includes('b. inggris') || m.includes('english')) {
-        // Struktur Kurikulum: Kelas X = 108 JP (3 JP/mgg) atau 144 JP (4 JP/mgg SMK), Kelas XI = 108 JP (3 JP/mgg) / 144 JP (4 JP/mgg SMK), Kelas XII = 96 JP (3 JP/mgg) / 128 JP (4 JP/mgg SMK)
-        if (j === 'SMK') {
-          jpPerMinggu = 4; // 144 JP (X & XI) atau 128 JP (XII)
+        // Struktur Kurikulum Merdeka (Permendikbudristek No. 12 Th. 2024):
+        // SMK: Kelas X = 144 JP (4 JP/mgg), Kelas XI = 108 JP (3 JP/mgg), Kelas XII = 96 JP (3 JP/mgg)
+        // SMA: Kelas X = 108 JP (3 JP/mgg), Kelas XI = 108 JP (3 JP/mgg), Kelas XII = 96 JP (3 JP/mgg)
+        if (j === 'SMK' && isX) {
+          jpPerMinggu = 4; // 144 JP hanya di Kelas X SMK
         } else {
-          jpPerMinggu = 3; // 108 JP (X & XI) atau 96 JP (XII)
+          jpPerMinggu = 3; // 108 JP di Kelas XI (SMK & SMA) dan 96 JP di Kelas XII
         }
       } else if (m.includes('bahasa indonesia')) {
-        // Kelas X & XI = 144 JP (4 JP/mgg), Kelas XII = 128 JP (4 JP/mgg) atau 96 JP (3 JP/mgg SMK)
-        jpPerMinggu = (j === 'SMK' && isXII) ? 3 : 4;
-      } else if (m.includes('matematika')) {
-        // Kelas X & XI = 144 JP (4 JP/mgg), Kelas XII = 128 JP (4 JP/mgg) atau 96 JP (3 JP/mgg SMK)
-        jpPerMinggu = (j === 'SMK' && isXII) ? 3 : 4;
-      } else if (m.includes('pendidikan agama') || m.includes('pai') || m.includes('pak') || m.includes('pjok') || m.includes('penjas')) {
-        // Agama: X & XI = 108 JP (3 JP/mgg), XII = 96 JP (3 JP/mgg) | PJOK: X & XI = 108 JP (3 JP/mgg), XII = 64 JP (2 JP/mgg SMK) / 96 JP (3 JP/mgg SMA)
-        if ((m.includes('pjok') || m.includes('penjas')) && j === 'SMK' && isXII) {
-          jpPerMinggu = 2; // 64 JP di XII SMK
+        // Kelas X = 144 JP (4 JP/mgg), Kelas XI = 108 JP (3 JP/mgg SMK) / 144 JP (4 JP/mgg SMA), Kelas XII = 96 JP (SMK) / 128 JP (SMA)
+        if (j === 'SMK') {
+          jpPerMinggu = isX ? 4 : 3; // 144 JP (X), 108 JP (XI), 96 JP (XII)
         } else {
-          jpPerMinggu = 3; // 108 JP (X & XI) atau 96 JP (XII)
+          jpPerMinggu = 4; // 144 JP (X & XI), 128 JP (XII)
+        }
+      } else if (m.includes('matematika')) {
+        // SMK: Kelas X = 144 JP (4 JP/mgg), Kelas XI = 108 JP (3 JP/mgg), Kelas XII = 96 JP (3 JP/mgg)
+        // SMA: Kelas X & XI = 144 JP (4 JP/mgg), Kelas XII = 128 JP (4 JP/mgg)
+        if (j === 'SMK') {
+          jpPerMinggu = isX ? 4 : 3; // 144 JP (X), 108 JP (XI), 96 JP (XII)
+        } else {
+          jpPerMinggu = 4;
+        }
+      } else if (m.includes('pendidikan agama') || m.includes('pai') || m.includes('pak') || m.includes('pjok') || m.includes('penjas')) {
+        // Agama: X & XI = 108 JP (3 JP/mgg), XII = 96 JP (3 JP/mgg)
+        // PJOK: X = 108 JP (3 JP/mgg), XI = 72 JP (2 JP/mgg SMK) / 108 JP (3 JP/mgg SMA), XII = 64 JP (2 JP/mgg SMK) / 96 JP (3 JP/mgg SMA)
+        if (m.includes('pjok') || m.includes('penjas')) {
+          if (j === 'SMK') {
+            jpPerMinggu = isX ? 3 : 2; // 108 JP (X), 72 JP (XI), 64 JP (XII)
+          } else {
+            jpPerMinggu = 3; // 108 JP (X & XI), 96 JP (XII)
+          }
+        } else {
+          jpPerMinggu = 3; // Agama: 108 JP (X & XI), 96 JP (XII)
         }
       } else if (m.includes('konsentrasi keahlian') || m.includes('produktif') || m.includes('kejuruan') || m.includes('dkv') || m.includes('tkj') || m.includes('tkr') || m.includes('akuntansi') || m.includes('tata boga') || m.includes('otomotif')) {
         // SMK: Dasar-dasar Kejuruan Kelas X = 432 JP (12 JP/mgg), Konsentrasi Keahlian Kelas XI = 648 JP (18 JP/mgg), Kelas XII = 704 JP (22 JP/mgg)
