@@ -1004,10 +1004,10 @@
             </div>
 
             <div>
-              <label class="form-label">2. Unggah Screenshot Struktur Kurikulum (Pagu JP &amp; Minggu) *</label>
+              <label class="form-label">2. Unggah Screenshot Struktur Kurikulum (Permendikdasmen No. 13 Tahun 2025) *</label>
               <div class="upload-dropzone" onclick="document.getElementById('inpFotoStruktur').click()">
                 <div style="font-weight: 700; color: var(--accent-dark); font-size: 13px;">Klik untuk Pilih Screenshot Struktur Kurikulum</div>
-                <div style="font-size: 11.5px; color: var(--text-muted);">Sumber AI membaca jumlah JP/minggu &amp; pagu minggu per tahun</div>
+                <div style="font-size: 11.5px; color: var(--text-muted);">Pedoman Resmi: Permendikdasmen No. 13 Th. 2025 (Jenjang SMA, SMK &amp; SMALB Kelas X–XII)</div>
                 <img id="previewImgStruktur" class="upload-preview-img" alt="Pratinjau Struktur Kurikulum">
               </div>
               <input type="file" id="inpFotoStruktur" accept="image/*" style="display: none;" onchange="handleUploadGambarStruktur(event)">
@@ -1017,11 +1017,11 @@
           <!-- PARAMETER BEBAN BELAJAR & PAGU MINGGU -->
           <div class="grid-3">
             <div class="form-group">
-              <label class="form-label">Pagu Asumsi Minggu / Tahun (Struktur Kurikulum)</label>
+              <label class="form-label">Pagu Asumsi Minggu / Tahun (Permendikdasmen No. 13 Th. 2025)</label>
               <select id="kalPaguMinggu" class="form-select" onchange="sinkronKelasDariPaguAme(); hitungOtomatisJjmpDariStruktur();">
-                <option value="36_X">Kelas X — Asumsi 36 Minggu/Tahun</option>
-                <option value="36_XI">Kelas XI — Asumsi 36 Minggu/Tahun</option>
-                <option value="32_XII_REG">Kelas XII Reguler — Asumsi 32 Minggu/Tahun</option>
+                <option value="36_X">Kelas X (SMA/SMK/SMALB) — Asumsi 36 Minggu/Tahun</option>
+                <option value="36_XI">Kelas XI (SMA/SMK/SMALB) — Asumsi 36 Minggu/Tahun</option>
+                <option value="32_XII_REG">Kelas XII Reguler (SMA/SMK/SMALB) — Asumsi 32 Minggu/Tahun</option>
                 <option value="16_XII_PKL">Kelas XII SMK (PKL 16 Mgg di Genap) — Asumsi 32 Mgg (16 Mgg Sekolah)</option>
               </select>
             </div>
@@ -2357,84 +2357,133 @@
     }
 
     function deteksiJpDariMapelDanStruktur(mapel, paguKode, jenjangGuru = 'SMA') {
-      const m = (mapel || '').toLowerCase();
+      const m = (mapel || '').toLowerCase().trim();
       const j = (jenjangGuru || penggunaAktif?.jenjang || 'SMA').toUpperCase();
       const isX = (paguKode === '36_X');
       const isXI = (paguKode === '36_XI');
       const isXII = (paguKode === '32_XII_REG' || paguKode === '16_XII_PKL');
+      const isPklGenap = (paguKode === '16_XII_PKL');
       const pembagi = isXII ? 32 : 36;
 
-      // Pemetaan presisi Struktur Kurikulum Merdeka per Jenjang & Tingkat Kelas (X, XI, XII)
-      let jpPerMinggu = 2;
+      // =========================================================================
+      // PEDOMAN RESMI: PERMENDIKDASMEN NOMOR 13 TAHUN 2025
+      // TABEL STRUKTUR KURIKULUM JENJANG SMA, SMK, DAN SMALB (KELAS X, XI, XII)
+      // =========================================================================
 
-      if (m.includes('tingkat lanjut')) {
-        // Mata Pelajaran Tingkat Lanjut di Kelas XI (180 JP = 5 JP/mgg) & Kelas XII (160 JP = 5 JP/mgg)
-        jpPerMinggu = isX ? 3 : 5;
-      } else if (m.includes('bahasa inggris') || m.includes('b. inggris') || m.includes('english')) {
-        // Struktur Kurikulum Merdeka (Permendikbudristek No. 12 Th. 2024):
-        // SMK: Kelas X = 144 JP (4 JP/mgg), Kelas XI = 108 JP (3 JP/mgg), Kelas XII = 96 JP (3 JP/mgg)
-        // SMA: Kelas X = 108 JP (3 JP/mgg), Kelas XI = 108 JP (3 JP/mgg), Kelas XII = 96 JP (3 JP/mgg)
-        if (j === 'SMK' && isX) {
-          jpPerMinggu = 4; // 144 JP hanya di Kelas X SMK
-        } else {
-          jpPerMinggu = 3; // 108 JP di Kelas XI (SMK & SMA) dan 96 JP di Kelas XII
+      // 1. JENJANG SMALB (PENDIDIKAN KHUSUS / SLB) — PERMENDIKDASMEN NO. 13 TH. 2025
+      if (j === 'SLB' || j === 'SMALB' || m.includes('smalb') || m.includes('slb') || m.includes('kebutuhan khusus')) {
+        if (m.includes('keterampilan') || m.includes('vokasional') || m.includes('tata boga') || m.includes('tata busana') || m.includes('kriyakayu') || m.includes('kriya') || m.includes('grafika') || m.includes('tik') || m.includes('otomotif') || m.includes('perbengkelan') || m.includes('kecantikan') || m.includes('pertanian') || m.includes('perikanan')) {
+          // Keterampilan Pilihan SMALB: Kelas X = 648 JP (18 JP/mgg), Kelas XI = 720 JP (20 JP/mgg), Kelas XII = 640 JP (20 JP/mgg)
+          if (isX) return 18 * 36;      // 648 JP
+          if (isXI) return 20 * 36;     // 720 JP
+          return 20 * 32;               // 640 JP
         }
-      } else if (m.includes('bahasa indonesia')) {
-        // Kelas X = 144 JP (4 JP/mgg), Kelas XI = 108 JP (3 JP/mgg SMK) / 144 JP (4 JP/mgg SMA), Kelas XII = 96 JP (SMK) / 128 JP (SMA)
-        if (j === 'SMK') {
-          jpPerMinggu = isX ? 4 : 3; // 144 JP (X), 108 JP (XI), 96 JP (XII)
-        } else {
-          jpPerMinggu = 4; // 144 JP (X & XI), 128 JP (XII)
+        if (m.includes('bahasa indonesia') || m.includes('matematika')) {
+          // Bahasa Indonesia & Matematika SMALB: Kelas X = 108 JP (3 JP/mgg), Kelas XI = 108 JP (3 JP/mgg), Kelas XII = 96 JP (3 JP/mgg)
+          return 3 * pembagi;
         }
-      } else if (m.includes('matematika')) {
-        // SMK: Kelas X = 144 JP (4 JP/mgg), Kelas XI = 108 JP (3 JP/mgg), Kelas XII = 96 JP (3 JP/mgg)
-        // SMA: Kelas X & XI = 144 JP (4 JP/mgg), Kelas XII = 128 JP (4 JP/mgg)
-        if (j === 'SMK') {
-          jpPerMinggu = isX ? 4 : 3; // 144 JP (X), 108 JP (XI), 96 JP (XII)
-        } else {
-          jpPerMinggu = 4;
+        if (m.includes('kebutuhan khusus') || m.includes('progsus')) {
+          // Program Kebutuhan Khusus SMALB: Kelas X = 72 JP (2 JP/mgg), Kelas XI = 72 JP (2 JP/mgg), Kelas XII = 64 JP (2 JP/mgg)
+          return 2 * pembagi;
         }
-      } else if (m.includes('pendidikan agama') || m.includes('pai') || m.includes('pak') || m.includes('pjok') || m.includes('penjas')) {
-        // Agama: X & XI = 108 JP (3 JP/mgg), XII = 96 JP (3 JP/mgg)
-        // PJOK: X = 108 JP (3 JP/mgg), XI = 72 JP (2 JP/mgg SMK) / 108 JP (3 JP/mgg SMA), XII = 64 JP (2 JP/mgg SMK) / 96 JP (3 JP/mgg SMA)
-        if (m.includes('pjok') || m.includes('penjas')) {
-          if (j === 'SMK') {
-            jpPerMinggu = isX ? 3 : 2; // 108 JP (X), 72 JP (XI), 64 JP (XII)
-          } else {
-            jpPerMinggu = 3; // 108 JP (X & XI), 96 JP (XII)
-          }
-        } else {
-          jpPerMinggu = 3; // Agama: 108 JP (X & XI), 96 JP (XII)
-        }
-      } else if (m.includes('konsentrasi keahlian') || m.includes('produktif') || m.includes('kejuruan') || m.includes('dkv') || m.includes('tkj') || m.includes('tkr') || m.includes('akuntansi') || m.includes('tata boga') || m.includes('otomotif')) {
-        // SMK: Dasar-dasar Kejuruan Kelas X = 432 JP (12 JP/mgg), Konsentrasi Keahlian Kelas XI = 648 JP (18 JP/mgg), Kelas XII = 704 JP (22 JP/mgg)
-        if (isX) jpPerMinggu = 12;      // 432 JP
-        else if (isXI) jpPerMinggu = 18; // 648 JP
-        else jpPerMinggu = 22;           // 704 JP
-      } else if (m.includes('dasar-dasar') || m.includes('dasar kejuruan')) {
-        jpPerMinggu = 12; // 432 JP (Kelas X SMK)
-      } else if (m.includes('projek kreatif') || m.includes('pkk') || m.includes('kewirausahaan')) {
-        // PKK SMK: Kelas XI = 180 JP (5 JP/mgg), Kelas XII = 160 JP (5 JP/mgg)
-        jpPerMinggu = isX ? 2 : 5;
-      } else if (m.includes('mapel pilihan') || m.includes('mata pelajaran pilihan')) {
-        // Mapel Pilihan SMK/SMA: Kelas XI = 144-180 JP (4-5 JP/mgg), Kelas XII = 128-160 JP (4-5 JP/mgg)
-        jpPerMinggu = (j === 'SMK') ? 4 : 5;
-      } else if (m.includes('biologi') || m.includes('fisika') || m.includes('kimia') || m.includes('ekonomi') || m.includes('sosiologi') || m.includes('geografi') || m.includes('antropologi') || m.includes('informatika')) {
-        // SMA: Kelas X (Umum/IPA/IPS) = 108 JP (3 JP/mgg) atau Informatika 72 JP (2 JP/mgg)
-        // SMA: Kelas XI Pilihan = 180 JP (5 JP/mgg), Kelas XII Pilihan = 160 JP (5 JP/mgg)
-        if (isX) {
-          jpPerMinggu = m.includes('informatika') ? 2 : 3;
-        } else {
-          jpPerMinggu = 5; // 180 JP (XI) atau 160 JP (XII)
-        }
-      } else if (m.includes('projek ipas') || m.includes('ipas')) {
-        jpPerMinggu = isX ? 6 : 3; // 216 JP di Kelas X SMK
-      } else if (m.includes('sejarah') || m.includes('pancasila') || m.includes('ppkn') || m.includes('seni')) {
-        // Sejarah & Pancasila: Kelas X & XI = 72 JP (2 JP/mgg), Kelas XII = 64 JP (2 JP/mgg)
-        jpPerMinggu = 2;
+        // Mapel Umum SMALB (Agama, Pancasila, Bahasa Inggris, IPA, IPS, Seni Budaya, PJOK, Mulok):
+        // Kelas X = 72 JP (2 JP/mgg), Kelas XI = 72 JP (2 JP/mgg), Kelas XII = 64 JP (2 JP/mgg)
+        return 2 * pembagi;
       }
 
-      return jpPerMinggu * pembagi;
+      // 2. JENJANG SMK — PERMENDIKDASMEN NO. 13 TAHUN 2025
+      if (j === 'SMK') {
+        // Kelompok Mata Pelajaran Kejuruan SMK:
+        if (m.includes('konsentrasi keahlian') || m.includes('produktif') || m.includes('kejuruan') || m.includes('dkv') || m.includes('tkj') || m.includes('rpl') || m.includes('tjkt') || m.includes('pplg') || m.includes('tkr') || m.includes('tsm') || m.includes('akuntansi') || m.includes('mplb') || m.includes('pemasaran') || m.includes('kuliner') || m.includes('tata boga') || m.includes('busana') || m.includes('perhotelan') || m.includes('agribisnis') || m.includes('nautika') || m.includes('farmasi') || m.includes('keperawatan')) {
+          if (isX) return 12 * 36;      // Dasar-dasar Program Keahlian Kelas X = 432 JP (12 JP/mgg)
+          if (isXI) return 18 * 36;     // Konsentrasi Keahlian Kelas XI = 648 JP (18 JP/mgg)
+          return 352;                   // Konsentrasi Keahlian Kelas XII = 352 JP (22 JP/mgg x 16 minggu)
+        }
+        if (m.includes('dasar-dasar') || m.includes('dasar program') || m.includes('dasar kejuruan')) {
+          return 12 * 36;               // Kelas X SMK = 432 JP (12 JP/mgg)
+        }
+        if (m.includes('projek kreatif') || m.includes('kreativitas, inovasi') || m.includes('pkk') || m.includes('kewirausahaan')) {
+          // PKK / Kreativitas, Inovasi, dan Kewirausahaan SMK: Kelas XI = 180 JP (5 JP/mgg), Kelas XII = 160 JP (5 JP/mgg x 32 mgg) atau 80 JP (5 JP/mgg x 16 mgg)
+          if (isX) return 0;
+          if (isXI) return 5 * 36;      // 180 JP
+          return isPklGenap ? 80 : 160; // 160 JP (32 mgg) / 80 JP (16 mgg sebelum PKL)
+        }
+        if (m.includes('mata pelajaran pilihan') || m.includes('mapel pilihan')) {
+          // Mapel Pilihan SMK: Kelas XI = 144 JP (4 JP/mgg), Kelas XII = 128 JP (4 JP/mgg x 32 mgg) atau 64 JP (4 JP/mgg x 16 mgg)
+          if (isX) return 0;
+          if (isXI) return 4 * 36;      // 144 JP
+          return isPklGenap ? 64 : 128; // 128 JP (32 mgg) / 64 JP (16 mgg)
+        }
+        if (m.includes('praktik kerja lapangan') || m.includes('pkl')) {
+          return isXII ? 736 : 0;       // PKL Kelas XII SMK = 736 JP (46 JP/mgg x 16 minggu)
+        }
+        if (m.includes('projek ipas') || m.includes('ipas')) {
+          return isX ? 6 * 36 : 0;      // Projek IPAS Kelas X SMK = 216 JP (6 JP/mgg)
+        }
+        if (m.includes('informatika') || m.includes('koding') || m.includes('kecerdasan artifisial')) {
+          return isX ? 4 * 36 : (isXI ? 4 * 36 : 4 * 32); // Informatika X SMK = 144 JP (4 JP/mgg)
+        }
+        // Kelompok Mata Pelajaran Umum SMK:
+        if (m.includes('pendidikan agama') || m.includes('pai') || m.includes('pak') || m.includes('agama')) {
+          return 3 * pembagi;           // Kelas X = 108 JP, Kelas XI = 108 JP, Kelas XII = 96 JP (3 JP/mgg)
+        }
+        if (m.includes('pancasila') || m.includes('ppkn')) {
+          return 2 * pembagi;           // Kelas X = 72 JP, Kelas XI = 72 JP, Kelas XII = 64 JP (2 JP/mgg)
+        }
+        if (m.includes('bahasa indonesia')) {
+          return (isX ? 4 : 3) * pembagi; // Kelas X = 144 JP (4 JP/mgg), Kelas XI = 108 JP (3 JP/mgg), Kelas XII = 96 JP (3 JP/mgg)
+        }
+        if (m.includes('matematika')) {
+          return (isX ? 4 : 3) * pembagi; // Kelas X = 144 JP (4 JP/mgg), Kelas XI = 108 JP (3 JP/mgg), Kelas XII = 96 JP (3 JP/mgg)
+        }
+        if (m.includes('bahasa inggris') || m.includes('b. inggris') || m.includes('english')) {
+          return (isX ? 4 : 3) * pembagi; // Kelas X = 144 JP (4 JP/mgg), Kelas XI = 108 JP (3 JP/mgg), Kelas XII = 96 JP (3 JP/mgg)
+        }
+        if (m.includes('pjok') || m.includes('penjas') || m.includes('olahraga')) {
+          return (isX ? 3 : 2) * pembagi; // Kelas X = 108 JP (3 JP/mgg), Kelas XI = 72 JP (2 JP/mgg), Kelas XII = 64 JP (2 JP/mgg)
+        }
+        if (m.includes('sejarah') || m.includes('seni') || m.includes('muatan lokal') || m.includes('mulok')) {
+          return 2 * pembagi;           // Sejarah: X = 72 JP, XI = 72 JP, XII = 64 JP (2 JP/mgg)
+        }
+        return 3 * pembagi;
+      }
+
+      // 3. JENJANG SMA — PERMENDIKDASMEN NO. 13 TAHUN 2025
+      if (m.includes('tingkat lanjut')) {
+        // Mata Pelajaran Tingkat Lanjut SMA (Matematika TL, B. Indonesia TL, B. Inggris TL): XI = 180 JP (5 JP/mgg), XII = 160 JP (5 JP/mgg)
+        return isX ? 3 * 36 : 5 * pembagi;
+      }
+      if (m.includes('pendidikan agama') || m.includes('pai') || m.includes('pak') || m.includes('agama')) {
+        return 3 * pembagi;             // SMA: X = 108 JP, XI = 108 JP, XII = 96 JP (3 JP/mgg)
+      }
+      if (m.includes('pancasila') || m.includes('ppkn')) {
+        return 2 * pembagi;             // SMA: X = 72 JP, XI = 72 JP, XII = 64 JP (2 JP/mgg)
+      }
+      if (m.includes('bahasa indonesia')) {
+        return 4 * pembagi;             // SMA: X = 144 JP, XI = 144 JP, XII = 128 JP (4 JP/mgg)
+      }
+      if (m.includes('matematika')) {
+        return 4 * pembagi;             // SMA: X = 144 JP, XI = 144 JP, XII = 128 JP (4 JP/mgg)
+      }
+      if (m.includes('bahasa inggris') || m.includes('b. inggris') || m.includes('english')) {
+        return 3 * pembagi;             // SMA: X = 108 JP, XI = 108 JP, XII = 96 JP (3 JP/mgg)
+      }
+      if (m.includes('pjok') || m.includes('penjas') || m.includes('olahraga')) {
+        return 3 * pembagi;             // SMA: X = 108 JP, XI = 108 JP, XII = 96 JP (3 JP/mgg)
+      }
+      if (m.includes('sejarah') || m.includes('seni') || m.includes('prakarya') || m.includes('muatan lokal') || m.includes('mulok')) {
+        return 2 * pembagi;             // SMA: X = 72 JP, XI = 72 JP, XII = 64 JP (2 JP/mgg)
+      }
+      if (m.includes('biologi') || m.includes('fisika') || m.includes('kimia') || m.includes('ekonomi') || m.includes('sosiologi') || m.includes('geografi') || m.includes('antropologi') || m.includes('informatika') || m.includes('koding') || m.includes('kecerdasan artifisial') || m.includes('bahasa asing') || m.includes('bahasa arab') || m.includes('bahasa jepang') || m.includes('bahasa jerman') || m.includes('bahasa mandarin')) {
+        // SMA Kelas X (IPA/IPS Terintegrasi): 108 JP (3 JP/mgg), Informatika X: 72 JP (2 JP/mgg)
+        // SMA Kelas XI & XII (Mata Pelajaran Pilihan): XI = 180 JP (5 JP/mgg), XII = 160 JP (5 JP/mgg)
+        if (isX) {
+          return m.includes('informatika') ? 2 * 36 : 3 * 36;
+        }
+        return 5 * pembagi;             // 180 JP (XI) dan 160 JP (XII)
+      }
+
+      return 3 * pembagi;
     }
 
     async function cobaBacaJpDariVisionAi(base64Img, mapel, labelKelasTarget, pembagiAsumsi) {
@@ -2449,10 +2498,10 @@
             const mapelLower = mapel.toLowerCase();
             const idxMapel = gabunganTeks.toLowerCase().indexOf(mapelLower);
             if (idxMapel !== -1) {
-              const potonganSekitar = gabunganTeks.slice(idxMapel, idxMapel + 160);
-              const kandidatAngka = (potonganSekitar.match(/\b(32|36|48|64|72|96|108|128|144|160|180|216|288|320|360|432|576|640|648|704)\b/g) || [])
+              const potonganSekitar = gabunganTeks.slice(idxMapel, idxMapel + 240);
+              const kandidatAngka = (potonganSekitar.match(/\b(32|36|48|64|72|96|108|128|144|160|180|216|288|320|352|360|432|576|640|648|704)\b/g) || [])
                 .map(n => parseInt(n, 10))
-                .filter(n => n % pembagiAsumsi === 0);
+                .filter(n => n % pembagiAsumsi === 0 || (mapelLower.includes('konsentrasi keahlian') && n === 352));
               if (kandidatAngka.length > 0) {
                 return kandidatAngka[0];
               }
@@ -2504,11 +2553,11 @@
       hitungOtomatisJjmpDariStruktur();
 
       const jjmpHasil = document.getElementById('kalJjmp').value;
-      document.getElementById('kalKetStruktur').value = `${labelTingkatKelas} (${jenjangAktif}) — ${mapelAktif}: ${totalJpTerdeteksi} JP/Thn ÷ ${pembagiAsumsi} Mgg = ${jjmpHasil} JP/Mgg`;
+      document.getElementById('kalKetStruktur').value = `Permendikdasmen No. 13/2025 | ${labelTingkatKelas} (${jenjangAktif}) — ${mapelAktif}: ${totalJpTerdeteksi} JP/Thn ÷ ${pembagiAsumsi} Mgg = ${jjmpHasil} JP/Mgg`;
 
       document.getElementById('panelHasilAnalisisStruktur').style.display = 'block';
       lblStatus.style.color = 'var(--success)';
-      lblStatus.innerHTML = `✓ Berhasil menganalisis Struktur Kurikulum <b>${labelTingkatKelas} (${kelasFaseInput})</b> untuk <b>${mapelAktif}</b>: ditemukan <b>${totalJpTerdeteksi} JP/Tahun</b> (${jjmpHasil} JP/Minggu).`;
+      lblStatus.innerHTML = `✓ Berhasil menganalisis Struktur Kurikulum (<b>Permendikdasmen No. 13 Tahun 2025</b>) <b>${labelTingkatKelas} (${kelasFaseInput})</b> untuk <b>${mapelAktif}</b>: ditemukan <b>${totalJpTerdeteksi} JP/Tahun</b> (${jjmpHasil} JP/Minggu).`;
 
       statusStrukturTeranalisis = true;
       const btnGen = document.getElementById('btnGenerateAmeUtama');
@@ -2539,16 +2588,18 @@
       const totalJpTahun = parseInt(inpTotal?.value, 10);
       if (!totalJpTahun || isNaN(totalJpTahun)) return;
 
-      const pembagiAsumsi = (paguKode === '36_X' || paguKode === '36_XI') ? 36 : 32;
+      const mapelAktif = hasilCpTerakhir?.mapel || penggunaAktif?.mapel || 'Mata Pelajaran';
+      const isKonsentrasiXII = (paguKode === '32_XII_REG' || paguKode === '16_XII_PKL') &&
+        (mapelAktif.toLowerCase().includes('konsentrasi keahlian') || totalJpTahun === 352);
+      const pembagiAsumsi = isKonsentrasiXII ? 16 : ((paguKode === '36_X' || paguKode === '36_XI') ? 36 : 32);
       const labelTingkatKelas = paguKode === '36_X' ? 'Kelas X' : (paguKode === '36_XI' ? 'Kelas XI' : 'Kelas XII');
       const jjmpHasil = Math.max(1, Math.round(totalJpTahun / pembagiAsumsi));
       document.getElementById('kalJjmp').value = jjmpHasil;
 
-      const mapelAktif = hasilCpTerakhir?.mapel || penggunaAktif?.mapel || 'Mata Pelajaran';
       const jenjangAktif = penggunaAktif?.jenjang || 'SMA';
       const ketEl = document.getElementById('kalKetStruktur');
       if (ketEl) {
-        ketEl.value = `${labelTingkatKelas} (${jenjangAktif}) — ${mapelAktif}: ${totalJpTahun} JP/Thn ÷ ${pembagiAsumsi} Mgg = ${jjmpHasil} JP/Mgg`;
+        ketEl.value = `Permendikdasmen No. 13/2025 | ${labelTingkatKelas} (${jenjangAktif}) — ${mapelAktif}: ${totalJpTahun} JP/Thn ÷ ${pembagiAsumsi} Mgg = ${jjmpHasil} JP/Mgg`;
       }
     }
 
@@ -2570,7 +2621,10 @@
         tampilkanToast('Total JP/Tahun dari Struktur Kurikulum belum terbaca. Silakan jalankan analisis terlebih dahulu!', 'warning');
         return;
       }
-      const pembagiAsumsi = (paguKode === '36_X' || paguKode === '36_XI') ? 36 : 32;
+      const mapelCek = hasilCpTerakhir.mapel || penggunaAktif?.mapel || '';
+      const isKonsentrasiXII = (paguKode === '32_XII_REG' || paguKode === '16_XII_PKL') &&
+        (mapelCek.toLowerCase().includes('konsentrasi keahlian') || totalJpTahun === 352);
+      const pembagiAsumsi = isKonsentrasiXII ? 16 : ((paguKode === '36_X' || paguKode === '36_XI') ? 36 : 32);
       const jjmp = parseInt(document.getElementById('kalJjmp').value, 10) || Math.max(1, Math.round(totalJpTahun / pembagiAsumsi));
       const hariSekolah = parseInt(document.getElementById('kalHariSekolah').value, 10) || 6;
       const tahunAjaran = document.getElementById('kalTahunAjaran').value.trim() || '2026/2027';
