@@ -1136,12 +1136,15 @@
           <!-- PANEL SINKRONISASI CEPAT DARI HASIL ATP -->
           <div style="background: var(--accent-light); border: 1px solid #99f6e4; border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
             <div style="flex: 1; min-width: 240px;">
-              <div style="font-size: 12.5px; font-weight: 700; color: var(--accent-dark);">Sinkronisasi Otomatis dari Generator CP &amp; ATP:</div>
+              <div style="font-size: 12.5px; font-weight: 700; color: var(--accent-dark);">Sinkronisasi Otomatis dari Generator CP &amp; ATP + Pagu Pertemuan AME:</div>
               <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 6px;">
-                <select id="rppmPilihUnitAtp" class="form-select" style="max-width: 380px; padding: 6px 10px; font-size: 12.5px;" onchange="terapkanPilihanAtpKeRppm()">
-                  <option value="ALL">Semua Urutan ATP (Tampilkan Seluruh ATP)</option>
+                <select id="rppmPilihUnitAtp" class="form-select" style="max-width: 440px; padding: 6px 10px; font-size: 12.5px;" onchange="terapkanPilihanAtpKeRppm()">
+                  <option value="ALL">Semua Urutan ATP (Generate Paket Lengkap Seluruh Pertemuan Setahun)</option>
                 </select>
                 <button type="button" class="btn btn-accent btn-sm" onclick="sinkronkanAtpKeRppm(true)">Sinkronisasi Sekarang</button>
+              </div>
+              <div id="infoCakupanPertemuanRppm" style="font-size: 11.5px; color: #0f766e; margin-top: 5px; font-weight: 600;">
+                *Tips Kurikulum Merdeka: 1 RPP/Modul Ajar disusun per Unit ATP (mencakup beberapa pertemuan) atau generate sekaligus seluruh unit ATP agar 100% pertemuan AME tercakup.
               </div>
             </div>
             <span id="badgeStatusSinkronRppm" class="badge badge-teal">Siap Sinkron</span>
@@ -1158,14 +1161,14 @@
             </div>
             <div class="form-group">
               <label class="form-label">3. Mata Pelajaran</label>
-              <input type="text" id="rppmMapel" class="form-input">
+              <input type="text" id="rppmMapel" class="form-input" oninput="isiDropdownPilihanAtpRppm(); terapkanPilihanAtpKeRppm();">
             </div>
           </div>
 
           <div class="grid-3">
             <div class="form-group">
               <label class="form-label">4. Kelas / Fase</label>
-              <input type="text" id="rppmKelasFase" class="form-input" value="X / Fase E">
+              <input type="text" id="rppmKelasFase" class="form-input" value="X / Fase E" oninput="isiDropdownPilihanAtpRppm(); terapkanPilihanAtpKeRppm();">
             </div>
             <div class="form-group">
               <label class="form-label">5. Tahun Pelajaran</label>
@@ -3881,6 +3884,34 @@
     // =========================================================================
     // GENERATOR-RPPM-AI (PEMBELAJARAN MENDALAM & 8 DPL INTERAKTIF)
     // =========================================================================
+    function hitungJjmpUniversalRppm() {
+      // 1. Jika AME sudah dijalankan, gunakan langsung JJMP resmi hasil AME
+      if (stateAmeProtaProsem && stateAmeProtaProsem.jjmp > 0) {
+        return stateAmeProtaProsem.jjmp;
+      }
+      // 2. Jika belum menjalankan AME, deteksi otomatis JJMP sesuai Mapel, Jenjang (SMA/SMK/SLB) & Kelas/Fase
+      const mapelRppm = (document.getElementById('rppmMapel')?.value || '').trim()
+        || penggunaAktif?.mapel
+        || hasilCpTerakhir?.mapel
+        || 'Mata Pelajaran';
+      const kelasFaseRppm = (document.getElementById('rppmKelasFase')?.value || '').toUpperCase();
+      const jenjangRppm = (penggunaAktif?.jenjang || (kelasFaseRppm.includes('SMALB') || kelasFaseRppm.includes('SLB') ? 'SLB' : 'SMA')).toUpperCase();
+
+      let kodeKelas = '36_X';
+      if (/\bXII\b|\b12\b/.test(kelasFaseRppm)) {
+        kodeKelas = '32_XII_REG';
+      } else if (/\bXI\b|\b11\b|FASE\s*F/.test(kelasFaseRppm)) {
+        kodeKelas = '36_XI';
+      }
+
+      const totalJpTahun = deteksiJpDariMapelDanStruktur(mapelRppm, kodeKelas, jenjangRppm);
+      const mapelLower = mapelRppm.toLowerCase();
+      const is16MggSmkXII = (kodeKelas === '32_XII_REG') && (jenjangRppm === 'SMK' || mapelLower.includes('konsentrasi keahlian') || mapelLower.includes('kewirausahaan') || mapelLower.includes('kreativitas') || mapelLower.includes('kreatifitas') || mapelLower.includes('pkk')) &&
+        (mapelLower.includes('konsentrasi keahlian') || mapelLower.includes('kewirausahaan') || mapelLower.includes('kreativitas') || mapelLower.includes('kreatifitas') || mapelLower.includes('inovatif') || mapelLower.includes('pkk') || mapelLower.includes('pilihan') || mapelLower.includes('matematika') || mapelLower.includes('bahasa inggris'));
+      const pembagi = is16MggSmkXII ? 16 : (kodeKelas === '32_XII_REG' ? 32 : 36);
+      return Math.max(1, Math.round((totalJpTahun || (3 * pembagi)) / pembagi));
+    }
+
     function persiapkanFormRppmAi() {
       if (penggunaAktif) {
         sinkronkanProfilKeSemuaMenu(penggunaAktif);
@@ -3899,13 +3930,32 @@
       const sel = document.getElementById('rppmPilihUnitAtp');
       if (!sel) return;
       const nilaiSebelumnya = sel.value || 'ALL';
-      sel.innerHTML = '<option value="ALL">Semua Urutan ATP (Tampilkan Seluruh Hasil ATP)</option>';
-      if (hasilCpTerakhir && Array.isArray(hasilCpTerakhir.atpTerstruktur)) {
-        hasilCpTerakhir.atpTerstruktur.forEach((a, idx) => {
+      const jjmpDinamis = hitungJjmpUniversalRppm();
+      const daftarAtp = (hasilCpTerakhir && Array.isArray(hasilCpTerakhir.atpTerstruktur)) ? hasilCpTerakhir.atpTerstruktur : [];
+
+      const totalPertAme = stateAmeProtaProsem
+        ? stateAmeProtaProsem.items.reduce((acc, it) => acc + (parseInt(it.minggu, 10) || 0), 0)
+        : daftarAtp.reduce((acc, a) => acc + Math.max(1, Math.round((a.jp || jjmpDinamis) / jjmpDinamis)), 0);
+      const totalJpAme = stateAmeProtaProsem
+        ? stateAmeProtaProsem.totalPaguJtm
+        : daftarAtp.reduce((acc, a) => acc + (a.jp || jjmpDinamis), 0);
+
+      const labelAll = totalPertAme > 0
+        ? `Semua Urutan ATP — Paket Lengkap 1 Tahun (${totalPertAme} Pertemuan / ${totalJpAme} JP)`
+        : 'Semua Urutan ATP (Generate Paket Lengkap Seluruh ATP)';
+
+      sel.innerHTML = `<option value="ALL">${labelAll}</option>`;
+      if (daftarAtp.length > 0) {
+        daftarAtp.forEach((a, idx) => {
           const opt = document.createElement('option');
           opt.value = String(idx);
-          const ringkasMateri = (a.materiInduk || a.materi || '').slice(0, 55);
-          opt.textContent = `${a.kodeAtp} (${a.kodeTp}) — ${ringkasMateri}`;
+          const ringkasMateri = (a.materiInduk || a.materi || '').slice(0, 48);
+          const itemProta = stateAmeProtaProsem?.items?.[idx];
+          const jpUnit = itemProta ? itemProta.jp : (a.jp || jjmpDinamis);
+          const pertUnit = itemProta ? itemProta.minggu : Math.max(1, Math.round(jpUnit / jjmpDinamis));
+          const semInfo = itemProta ? ` — Sem. ${itemProta.semester}` : (a.semester ? ` — Sem. ${a.semester}` : '');
+          const infoPert = ` [${pertUnit} Pert / ${jpUnit} JP${semInfo}]`;
+          opt.textContent = `${a.kodeAtp} (${a.kodeTp}) — ${ringkasMateri}${infoPert}`;
           sel.appendChild(opt);
         });
       }
@@ -3921,6 +3971,10 @@
       const sel = document.getElementById('rppmPilihUnitAtp');
       const pilihan = sel ? sel.value : 'ALL';
       const daftarAtp = hasilCpTerakhir.atpTerstruktur;
+      const jjmpDinamis = hitungJjmpUniversalRppm();
+      const infoEl = document.getElementById('infoCakupanPertemuanRppm');
+      const mapelLabel = document.getElementById('rppmMapel')?.value.trim() || hasilCpTerakhir.mapel || 'Mata Pelajaran';
+      const kelasLabel = document.getElementById('rppmKelasFase')?.value.trim() || hasilCpTerakhir.fase || '';
 
       if (pilihan === 'ALL') {
         const teksSemuaAtp = daftarAtp
@@ -3928,16 +3982,33 @@
           .join('\n');
         document.getElementById('rppmTujuanPembelajaran').value = teksSemuaAtp;
         if (hasilCpTerakhir.topikList?.[0]) {
-          document.getElementById('rppmTopik').value = hasilCpTerakhir.topikList[0];
+          document.getElementById('rppmTopik').value = `Seluruh Unit Pembelajaran ${mapelLabel} (${kelasLabel} — 1 Tahun Ajaran)`;
+        }
+        const totPert = (stateAmeProtaProsem && stateAmeProtaProsem.items)
+          ? stateAmeProtaProsem.items.reduce((acc, it) => acc + (parseInt(it.minggu, 10) || 0), 0)
+          : daftarAtp.reduce((acc, a) => acc + Math.max(1, Math.round((a.jp || jjmpDinamis) / jjmpDinamis)), 0);
+        const totJp = (stateAmeProtaProsem && stateAmeProtaProsem.totalPaguJtm)
+          ? stateAmeProtaProsem.totalPaguJtm
+          : daftarAtp.reduce((acc, a) => acc + (a.jp || jjmpDinamis), 0);
+
+        document.getElementById('rppmAlokasiJp').value = `${totJp} JP (${jjmpDinamis} JP/Pertemuan)`;
+        document.getElementById('rppmJlhPertemuan').value = Math.max(1, totPert);
+        if (infoEl) {
+          infoEl.innerText = `✓ Mode Paket Lengkap 1 Tahun (${mapelLabel} — ${kelasLabel}): Menghasilkan RPP terstruktur untuk seluruh ${daftarAtp.length} Unit ATP yang mencakup 100% dari ${totPert} Pertemuan (${totJp} JP).`;
         }
       } else {
         const idx = parseInt(pilihan, 10);
         const item = daftarAtp[idx];
+        const itemProta = stateAmeProtaProsem?.items?.[idx];
         if (item) {
           document.getElementById('rppmTujuanPembelajaran').value = `[${item.kodeAtp} / ${item.kodeTp}] ${item.rumusan}`;
           document.getElementById('rppmTopik').value = item.materiInduk || item.materi || '';
-          if (item.jp) {
-            document.getElementById('rppmAlokasiJp').value = `${item.jp} JP`;
+          const jpUnit = itemProta ? itemProta.jp : (item.jp || jjmpDinamis);
+          const pertUnit = itemProta ? itemProta.minggu : Math.max(1, Math.round(jpUnit / jjmpDinamis));
+          document.getElementById('rppmAlokasiJp').value = `${jpUnit} JP (${jjmpDinamis} JP x ${pertUnit} Pertemuan)`;
+          document.getElementById('rppmJlhPertemuan').value = pertUnit;
+          if (infoEl) {
+            infoEl.innerText = `✓ Mode Per Unit ATP (${item.kodeAtp} — ${mapelLabel}): Mencakup ${pertUnit} Pertemuan (${jpUnit} JP). Rincian kegiatan tiap pertemuan otomatis dijabarkan dalam 1 dokumen RPP.`;
           }
         }
       }
@@ -4028,7 +4099,7 @@
       const kelasFase = document.getElementById('rppmKelasFase').value.trim() || 'X / Fase E';
       const tahunPel = document.getElementById('rppmTahunPelajaran').value.trim() || '2026/2027';
       const alokasiJp = document.getElementById('rppmAlokasiJp').value.trim() || '2 x 45 Menit';
-      const jlhPertemuan = document.getElementById('rppmJlhPertemuan').value || '1';
+      const jlhPertemuan = Math.max(1, parseInt(document.getElementById('rppmJlhPertemuan').value, 10) || 1);
       const topik = document.getElementById('rppmTopik').value.trim();
       const tp = document.getElementById('rppmTujuanPembelajaran').value.trim();
       const lintas = document.getElementById('rppmLintasDisiplin').value.trim() || '-';
@@ -4058,6 +4129,9 @@
         ? dplTerpilih.join(', ')
         : 'Penalaran Kritis, Kolaborasi, Komunikasi';
 
+      const pilihanUnit = document.getElementById('rppmPilihUnitAtp')?.value || 'ALL';
+      const isModePaketLengkap = (pilihanUnit === 'ALL' && hasilCpTerakhir && Array.isArray(hasilCpTerakhir.atpTerstruktur) && hasilCpTerakhir.atpTerstruktur.length > 1);
+
       hasilRppmTerakhir = {
         sekolah,
         namaGuru,
@@ -4078,181 +4152,263 @@
         dplText
       };
 
-      const htmlRppm = `
-        <div style="text-align:center; margin-bottom:14px;">
-          <h2 style="font-size:15.5px; margin:0; color:#0f4c81;">RENCANA PELAKSANAAN PEMBELAJARAN (RPP)</h2>
-          <p style="font-size:12px; font-weight:bold; color:#0f766e;">(Sesuai dengan Pendekatan Pembelajaran Mendalam (Deep Learning) dan Permendikdasmen No. 1 Tahun 2026)</p>
-        </div>
+      const buatKartuSatuRppm = (judulSubHeader, topikUnit, tpUnit, alokasiUnit, jumlahPertUnit, nomorUrutPertMulai) => {
+        const pertAkhir = nomorUrutPertMulai + jumlahPertUnit - 1;
+        const labelRentangPert = jumlahPertUnit > 1
+          ? `Pertemuan ke-${nomorUrutPertMulai} s.d. ke-${pertAkhir} (${jumlahPertUnit} Pertemuan)`
+          : `Pertemuan ke-${nomorUrutPertMulai} (1 Pertemuan)`;
 
-        <table>
-          <thead>
-            <tr>
-              <th colspan="3" style="background:#0f4c81; color:#ffffff; text-align:left; padding:7px 10px;">A. IDENTITAS &amp; IDENTIFIKASI</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td style="width:30%; font-weight:bold; background:#f8fafc;">Satuan Pendidikan</td>
-              <td style="width:3%; text-align:center;">:</td>
-              <td>${sekolah}</td>
-            </tr>
-            <tr>
-              <td style="font-weight:bold; background:#f8fafc;">Mata Pelajaran / Fase / Kelas</td>
-              <td style="text-align:center;">:</td>
-              <td>${mapel} / ${kelasFase} (Tahun Pelajaran ${tahunPel})</td>
-            </tr>
-            <tr>
-              <td style="font-weight:bold; background:#f8fafc;">Topik / Materi Pokok</td>
-              <td style="text-align:center;">:</td>
-              <td><b>${topik}</b></td>
-            </tr>
-            <tr>
-              <td style="font-weight:bold; background:#f8fafc;">Alokasi Waktu</td>
-              <td style="text-align:center;">:</td>
-              <td>${alokasiJp} (${jlhPertemuan} Pertemuan)</td>
-            </tr>
-            <tr>
-              <td style="font-weight:bold; background:#f8fafc;">Kesiapan Peserta Didik</td>
-              <td style="text-align:center;">:</td>
-              <td>Peserta didik memiliki pengetahuan awal dasar terkait fenomena <i>${topik}</i> dalam kehidupan sehari-hari dan dipetakan melalui asesmen diagnostik awal untuk menyesuaikan gaya belajar serta dukungan pendampingan.</td>
-            </tr>
-            <tr>
-              <td style="font-weight:bold; background:#f8fafc;">Dimensi Profil Lulusan (DPL)</td>
-              <td style="text-align:center;">:</td>
-              <td><b>${dplText}</b></td>
-            </tr>
-          </tbody>
-        </table>
+        // Rincian skenario per pertemuan apabila 1 unit ATP mencakup beberapa pertemuan
+        let blokRincianMultiPertemuan = '';
+        if (jumlahPertUnit > 1) {
+          const daftarSkenarioPert = [];
+          for (let p = 0; p < jumlahPertUnit; p++) {
+            const ke = nomorUrutPertMulai + p;
+            let fokusPert = '';
+            if (p === 0) {
+              fokusPert = `<b>Pertemuan ke-${ke} (Tahap Memahami — Mindful &amp; Meaningful):</b> Asesmen diagnostik awal, eksplorasi konsep dasar, bedah studi kasus nyata, dan pemetaan masalah pada topik <i>${topikUnit}</i>.`;
+            } else if (p === jumlahPertUnit - 1) {
+              fokusPert = `<b>Pertemuan ke-${ke} (Tahap Mengaplikasi Lanjut &amp; Merefleksi — Joyful &amp; Mindful):</b> Finalisasi karya/produk, presentasi hasil kelompok, evaluasi mutu, refleksi mendalam, dan asesmen sumatif unit.`;
+            } else {
+              fokusPert = `<b>Pertemuan ke-${ke} (Tahap Mengaplikasi — Meaningful &amp; Kolaboratif):</b> Praktik terbimbing, perancangan solusi/prototipe, pengujian prosedur kerja (SOP &amp; K3), dan diskusi kelompok berbasis LKPD.`;
+            }
+            daftarSkenarioPert.push(`<div style="margin-bottom:4px;">&bull; ${fokusPert}</div>`);
+          }
+          blokRincianMultiPertemuan = `
+            <div style="background:#f0fdf4; border:1px solid #86efac; padding:8px 10px; border-radius:6px; margin-bottom:10px; font-size:12px;">
+              <b style="color:#14532d;">Distribusi Alur Pembelajaran (${labelRentangPert}):</b><br>
+              ${daftarSkenarioPert.join('')}
+            </div>
+          `;
+        }
 
-        <table>
-          <thead>
-            <tr>
-              <th colspan="3" style="background:#0d9488; color:#ffffff; text-align:left; padding:7px 10px;">B. DESAIN PEMBELAJARAN</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td style="width:30%; font-weight:bold; background:#f8fafc;">Tujuan Pembelajaran (Sumber ATP)</td>
-              <td style="width:3%; text-align:center;">:</td>
-              <td style="white-space:pre-line;">${tp}</td>
-            </tr>
-            <tr>
-              <td style="font-weight:bold; background:#f8fafc;">Lintas Disiplin Ilmu</td>
-              <td style="text-align:center;">:</td>
-              <td>${lintas}</td>
-            </tr>
-            <tr>
-              <td style="font-weight:bold; background:#f8fafc;">Praktik Pedagogis</td>
-              <td style="text-align:center;">:</td>
-              <td>${pedagogis}</td>
-            </tr>
-            <tr>
-              <td style="font-weight:bold; background:#f8fafc;">Kemitraan Pembelajaran</td>
-              <td style="text-align:center;">:</td>
-              <td>${kemitraan}</td>
-            </tr>
-            <tr>
-              <td style="font-weight:bold; background:#f8fafc;">Lingkungan Pembelajaran</td>
-              <td style="text-align:center;">:</td>
-              <td>${lingkungan}</td>
-            </tr>
-            <tr>
-              <td style="font-weight:bold; background:#f8fafc;">Pemanfaatan Digital</td>
-              <td style="text-align:center;">:</td>
-              <td>${digital}</td>
-            </tr>
-          </tbody>
-        </table>
+        return `
+          <div style="page-break-after: always; margin-bottom: 28px; border-bottom: 2px dashed #cbd5e1; padding-bottom: 20px;">
+            <div style="text-align:center; margin-bottom:14px;">
+              <h2 style="font-size:15.5px; margin:0; color:#0f4c81;">RENCANA PELAKSANAAN PEMBELAJARAN (RPP) ${judulSubHeader}</h2>
+              <p style="font-size:12px; font-weight:bold; color:#0f766e;">(Sesuai dengan Pendekatan Pembelajaran Mendalam (Deep Learning) dan Permendikdasmen No. 1 Tahun 2026)</p>
+            </div>
 
-        <table>
-          <thead>
-            <tr>
-              <th colspan="3" style="background:#0f4c81; color:#ffffff; text-align:left; padding:7px 10px;">C. PENGALAMAN BELAJAR (MINDFUL, MEANINGFUL &amp; JOYFUL LEARNING)</th>
-            </tr>
-            <tr>
-              <th style="width:24%; background:#e6f0fa; color:#093358;">Tahap &amp; Prinsip</th>
-              <th style="background:#e6f0fa; color:#093358;">Deskripsi Kegiatan Pembelajaran</th>
-              <th style="width:14%; background:#e6f0fa; color:#093358;">Alokasi Waktu</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><b>1. Kegiatan Awal</b><br><i>(Berkesadaran / Mindful &amp; Menggembirakan / Joyful)</i></td>
-              <td>
-                &bull; Guru membuka pembelajaran dengan salam, doa bersama, dan mengecek kehadiran serta kesiapan emosional peserta didik.<br>
-                &bull; <b>Apersepsi Kontekstual:</b> Guru memberikan pertanyaan pemantik atau <i>ice breaking</i> singkat yang berkaitan dengan fenomena nyata <b>${topik}</b> di lingkungan sekitar siswa.<br>
-                &bull; Guru menyampaikan tujuan pembelajaran dan garis besar aktivitas agar peserta didik menyadari arah dan manfaat belajarnya.
-              </td>
-              <td style="text-align:center;">15% Waktu<br>(10–15 Menit)</td>
-            </tr>
-            <tr>
-              <td><b>2. Kegiatan Inti</b><br><i>(Memahami, Mengaplikasi, Merefleksi)</i></td>
-              <td>
-                <b>a. Memahami (Bermakna / Meaningful):</b><br>
-                &bull; Peserta didik menggali konsep utama <b>${topik}</b> melalui bacaan, tayangan media digital, atau observasi terbimbing.<br>
-                &bull; Peserta didik mengaitkan informasi baru dengan pengetahuan awal dan berdiskusi untuk membangun pemahaman konseptual.<br><br>
-                <b>b. Mengaplikasi (Bermakna &amp; Kolaboratif):</b><br>
-                &bull; Peserta didik bekerja dalam kelompok menggunakan sintaks <i>${pedagogis}</i> untuk menerapkan konsep pada studi kasus, pemecahan masalah, atau proyek berbasis LKPD.<br>
-                &bull; Setiap kelompok mempresentasikan hasil temuan atau rancangan solusi dan saling memberikan tanggapan konstruktif.<br><br>
-                <b>c. Merefleksi (Berkesadaran / Mindful):</b><br>
-                &bull; Peserta didik mengevaluasi proses berpikir, hambatan yang ditemui selama kegiatan, serta cara mengatasinya.<br>
-                &bull; Peserta didik mengaitkan materi <b>${topik}</b> dengan dampak atau penerapan nyata dalam kehidupan sehari-hari.
-              </td>
-              <td style="text-align:center;">70% Waktu<br>(60–65 Menit)</td>
-            </tr>
-            <tr>
-              <td><b>3. Kegiatan Penutup</b><br><i>(Menggembirakan &amp; Berkesadaran)</i></td>
-              <td>
-                &bull; Guru bersama peserta didik menyimpulkan poin-poin utama pembelajaran yang telah dilaksanakan.<br>
-                &bull; Guru memberikan umpan balik apresiatif atas proses belajar siswa dan menyampaikan rencana tindak lanjut untuk pertemuan berikutnya.<br>
-                &bull; Pembelajaran ditutup dengan doa dan salam.
-              </td>
-              <td style="text-align:center;">15% Waktu<br>(10 Menit)</td>
-            </tr>
-          </tbody>
-        </table>
+            <table>
+              <thead>
+                <tr>
+                  <th colspan="3" style="background:#0f4c81; color:#ffffff; text-align:left; padding:7px 10px;">A. IDENTITAS &amp; IDENTIFIKASI</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="width:30%; font-weight:bold; background:#f8fafc;">Satuan Pendidikan</td>
+                  <td style="width:3%; text-align:center;">:</td>
+                  <td>${sekolah}</td>
+                </tr>
+                <tr>
+                  <td style="font-weight:bold; background:#f8fafc;">Mata Pelajaran / Fase / Kelas</td>
+                  <td style="text-align:center;">:</td>
+                  <td>${mapel} / ${kelasFase} (Tahun Pelajaran ${tahunPel})</td>
+                </tr>
+                <tr>
+                  <td style="font-weight:bold; background:#f8fafc;">Topik / Materi Pokok</td>
+                  <td style="text-align:center;">:</td>
+                  <td><b>${topikUnit}</b></td>
+                </tr>
+                <tr>
+                  <td style="font-weight:bold; background:#f8fafc;">Alokasi Waktu &amp; Pertemuan</td>
+                  <td style="text-align:center;">:</td>
+                  <td><b>${alokasiUnit}</b> — ${labelRentangPert}</td>
+                </tr>
+                <tr>
+                  <td style="font-weight:bold; background:#f8fafc;">Kesiapan Peserta Didik</td>
+                  <td style="text-align:center;">:</td>
+                  <td>Peserta didik memiliki pengetahuan awal dasar terkait fenomena <i>${topikUnit}</i> dalam kehidupan sehari-hari dan dipetakan melalui asesmen diagnostik awal untuk menyesuaikan gaya belajar serta dukungan pendampingan.</td>
+                </tr>
+                <tr>
+                  <td style="font-weight:bold; background:#f8fafc;">Dimensi Profil Lulusan (DPL)</td>
+                  <td style="text-align:center;">:</td>
+                  <td><b>${dplText}</b></td>
+                </tr>
+              </tbody>
+            </table>
 
-        <table>
-          <thead>
-            <tr>
-              <th colspan="3" style="background:#0d9488; color:#ffffff; text-align:left; padding:7px 10px;">D. ASESMEN PEMBELAJARAN</th>
-            </tr>
-            <tr>
-              <th style="width:24%; background:#e6fffa; color:#0f766e;">Jenis Asesmen</th>
-              <th style="width:38%; background:#e6fffa; color:#0f766e;">Teknik &amp; Bentuk Instrumen</th>
-              <th style="width:38%; background:#e6fffa; color:#0f766e;">Fokus Penilaian</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><b>Asesmen Awal</b><br><i>(Diagnostik)</i></td>
-              <td>Tanya jawab lisan, kuis singkat pemantik, atau observasi kesiapan belajar di awal sesi.</td>
-              <td>Memetakan pengetahuan prasyarat, minat, dan kesiapan belajar peserta didik terkait <b>${topik}</b>.</td>
-            </tr>
-            <tr>
-              <td><b>Asesmen Proses</b><br><i>(Assessment as/for Learning)</i></td>
-              <td>Observasi aktivitas diskusi kelompok, penilaian kinerja LKPD, dan lembar refleksi diri.</td>
-              <td>Memantau perkembangan pemahaman konsep, dimensi <b>${dplText}</b>, dan memberikan umpan balik formatif.</td>
-            </tr>
-            <tr>
-              <td><b>Asesmen Akhir</b><br><i>(Assessment of Learning)</i></td>
-              <td>Tes tertulis (uraian/studi kasus), penilaian produk/proyek, atau rubrik presentasi.</td>
-              <td>Mengukur ketercapaian tujuan pembelajaran dan kemampuan menerapkan konsep secara mendalam.</td>
-            </tr>
-          </tbody>
-        </table>
+            <table>
+              <thead>
+                <tr>
+                  <th colspan="3" style="background:#0d9488; color:#ffffff; text-align:left; padding:7px 10px;">B. DESAIN PEMBELAJARAN</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="width:30%; font-weight:bold; background:#f8fafc;">Tujuan Pembelajaran (Sumber ATP)</td>
+                  <td style="width:3%; text-align:center;">:</td>
+                  <td style="white-space:pre-line;">${tpUnit}</td>
+                </tr>
+                <tr>
+                  <td style="font-weight:bold; background:#f8fafc;">Lintas Disiplin Ilmu</td>
+                  <td style="text-align:center;">:</td>
+                  <td>${lintas}</td>
+                </tr>
+                <tr>
+                  <td style="font-weight:bold; background:#f8fafc;">Praktik Pedagogis</td>
+                  <td style="text-align:center;">:</td>
+                  <td>${pedagogis}</td>
+                </tr>
+                <tr>
+                  <td style="font-weight:bold; background:#f8fafc;">Kemitraan Pembelajaran</td>
+                  <td style="text-align:center;">:</td>
+                  <td>${kemitraan}</td>
+                </tr>
+                <tr>
+                  <td style="font-weight:bold; background:#f8fafc;">Lingkungan Pembelajaran</td>
+                  <td style="text-align:center;">:</td>
+                  <td>${lingkungan}</td>
+                </tr>
+                <tr>
+                  <td style="font-weight:bold; background:#f8fafc;">Pemanfaatan Digital</td>
+                  <td style="text-align:center;">:</td>
+                  <td>${digital}</td>
+                </tr>
+              </tbody>
+            </table>
 
-        <div style="margin-top: 32px; display: flex; justify-content: space-between; page-break-inside: avoid;">
-          <div style="font-size: 12px; width: 240px; text-align: center;">
-            Mengetahui,<br>Kepala Sekolah<br><br><br><br>
-            <b>${namaKepsek}</b><br>NIP. ${nipKepsek}
+            ${blokRincianMultiPertemuan}
+
+            <table>
+              <thead>
+                <tr>
+                  <th colspan="3" style="background:#0f4c81; color:#ffffff; text-align:left; padding:7px 10px;">C. PENGALAMAN BELAJAR (MINDFUL, MEANINGFUL &amp; JOYFUL LEARNING)</th>
+                </tr>
+                <tr>
+                  <th style="width:24%; background:#e6f0fa; color:#093358;">Tahap &amp; Prinsip</th>
+                  <th style="background:#e6f0fa; color:#093358;">Deskripsi Kegiatan Pembelajaran</th>
+                  <th style="width:14%; background:#e6f0fa; color:#093358;">Alokasi Waktu</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><b>1. Kegiatan Awal</b><br><i>(Berkesadaran / Mindful &amp; Menggembirakan / Joyful)</i></td>
+                  <td>
+                    &bull; Guru membuka pembelajaran dengan salam, doa bersama, dan mengecek kehadiran serta kesiapan emosional peserta didik.<br>
+                    &bull; <b>Apersepsi Kontekstual:</b> Guru memberikan pertanyaan pemantik atau <i>ice breaking</i> singkat yang berkaitan dengan fenomena nyata <b>${topikUnit}</b> di lingkungan sekitar siswa.<br>
+                    &bull; Guru menyampaikan tujuan pembelajaran dan garis besar aktivitas agar peserta didik menyadari arah dan manfaat belajarnya.
+                  </td>
+                  <td style="text-align:center;">15% Waktu<br>Tiap Pertemuan</td>
+                </tr>
+                <tr>
+                  <td><b>2. Kegiatan Inti</b><br><i>(Memahami, Mengaplikasi, Merefleksi)</i></td>
+                  <td>
+                    <b>a. Memahami (Bermakna / Meaningful):</b><br>
+                    &bull; Peserta didik menggali konsep utama <b>${topikUnit}</b> melalui bacaan, tayangan media digital, atau observasi terbimbing.<br>
+                    &bull; Peserta didik mengaitkan informasi baru dengan pengetahuan awal dan berdiskusi untuk membangun pemahaman konseptual.<br><br>
+                    <b>b. Mengaplikasi (Bermakna &amp; Kolaboratif):</b><br>
+                    &bull; Peserta didik bekerja dalam kelompok menggunakan sintaks <i>${pedagogis}</i> untuk menerapkan konsep pada studi kasus, pemecahan masalah, atau proyek berbasis LKPD.<br>
+                    &bull; Setiap kelompok mempresentasikan hasil temuan atau rancangan solusi dan saling memberikan tanggapan konstruktif.<br><br>
+                    <b>c. Merefleksi (Berkesadaran / Mindful):</b><br>
+                    &bull; Peserta didik mengevaluasi proses berpikir, hambatan yang ditemui selama kegiatan, serta cara mengatasinya.<br>
+                    &bull; Peserta didik mengaitkan materi <b>${topikUnit}</b> dengan dampak atau penerapan nyata dalam kehidupan sehari-hari.
+                  </td>
+                  <td style="text-align:center;">70% Waktu<br>Tiap Pertemuan</td>
+                </tr>
+                <tr>
+                  <td><b>3. Kegiatan Penutup</b><br><i>(Menggembirakan &amp; Berkesadaran)</i></td>
+                  <td>
+                    &bull; Guru bersama peserta didik menyimpulkan poin-poin utama pembelajaran yang telah dilaksanakan.<br>
+                    &bull; Guru memberikan umpan balik apresiatif atas proses belajar siswa dan menyampaikan rencana tindak lanjut untuk pertemuan berikutnya.<br>
+                    &bull; Pembelajaran ditutup dengan doa dan salam.
+                  </td>
+                  <td style="text-align:center;">15% Waktu<br>Tiap Pertemuan</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <table>
+              <thead>
+                <tr>
+                  <th colspan="3" style="background:#0d9488; color:#ffffff; text-align:left; padding:7px 10px;">D. ASESMEN PEMBELAJARAN</th>
+                </tr>
+                <tr>
+                  <th style="width:24%; background:#e6fffa; color:#0f766e;">Jenis Asesmen</th>
+                  <th style="width:38%; background:#e6fffa; color:#0f766e;">Teknik &amp; Bentuk Instrumen</th>
+                  <th style="width:38%; background:#e6fffa; color:#0f766e;">Fokus Penilaian</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><b>Asesmen Awal</b><br><i>(Diagnostik)</i></td>
+                  <td>Tanya jawab lisan, kuis singkat pemantik, atau observasi kesiapan belajar di awal sesi.</td>
+                  <td>Memetakan pengetahuan prasyarat, minat, dan kesiapan belajar peserta didik terkait <b>${topikUnit}</b>.</td>
+                </tr>
+                <tr>
+                  <td><b>Asesmen Proses</b><br><i>(Assessment as/for Learning)</i></td>
+                  <td>Observasi aktivitas diskusi kelompok, penilaian kinerja LKPD, dan lembar refleksi diri.</td>
+                  <td>Memantau perkembangan pemahaman konsep, dimensi <b>${dplText}</b>, dan memberikan umpan balik formatif.</td>
+                </tr>
+                <tr>
+                  <td><b>Asesmen Akhir</b><br><i>(Assessment of Learning)</i></td>
+                  <td>Tes tertulis (uraian/studi kasus), penilaian produk/proyek, atau rubrik presentasi.</td>
+                  <td>Mengukur ketercapaian tujuan pembelajaran dan kemampuan menerapkan konsep secara mendalam.</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div style="margin-top: 28px; display: flex; justify-content: space-between; page-break-inside: avoid;">
+              <div style="font-size: 12px; width: 240px; text-align: center;">
+                Mengetahui,<br>Kepala Sekolah<br><br><br><br>
+                <b>${namaKepsek}</b><br>NIP. ${nipKepsek}
+              </div>
+              <div style="font-size: 12px; width: 260px; text-align: center;">
+                ${tempatTgl}<br>Guru Mata Pelajaran<br><br><br><br>
+                <b>${namaGuru}</b><br>NIP. ${nipGuru}
+              </div>
+            </div>
           </div>
-          <div style="font-size: 12px; width: 260px; text-align: center;">
-            ${tempatTgl}<br>Guru Mata Pelajaran<br><br><br><br>
-            <b>${namaGuru}</b><br>NIP. ${nipGuru}
+        `;
+      };
+
+      let htmlRppm = '';
+      if (isModePaketLengkap) {
+        const daftarAtp = hasilCpTerakhir.atpTerstruktur;
+        const jjmpDinamis = hitungJjmpUniversalRppm();
+        let kursorPertemuan = 1;
+        const totalSemuaPert = stateAmeProtaProsem
+          ? stateAmeProtaProsem.items.reduce((acc, it) => acc + (parseInt(it.minggu, 10) || 0), 0)
+          : daftarAtp.reduce((acc, a) => acc + Math.max(1, Math.round((a.jp || jjmpDinamis) / jjmpDinamis)), 0);
+        const totalSemuaJp = stateAmeProtaProsem?.totalPaguJtm
+          || daftarAtp.reduce((acc, a) => acc + (a.jp || jjmpDinamis), 0);
+
+        const bannerRingkasanPaket = `
+          <div class="no-print" style="background:#dcfce7; border:1.5px solid #16a34a; color:#14532d; padding:10px 14px; border-radius:8px; margin-bottom:16px; font-size:12.5px; font-weight:600;">
+            ✓ Paket Lengkap RPP Pembelajaran Mendalam (${mapel} — ${kelasFase}): Terdiri dari <b>${daftarAtp.length} Unit RPP</b> yang mencakup <b>100% dari ${totalSemuaPert} Pertemuan (${totalSemuaJp} JP)</b>.
           </div>
-        </div>
-      `;
+        `;
+
+        htmlRppm = bannerRingkasanPaket + daftarAtp.map((unit, idx) => {
+          const itemProta = stateAmeProtaProsem?.items?.[idx];
+          const pertUnit = itemProta ? Math.max(1, parseInt(itemProta.minggu, 10) || 1) : Math.max(1, Math.round((unit.jp || jjmpDinamis) / jjmpDinamis));
+          const jpUnit = itemProta ? itemProta.jp : (unit.jp || pertUnit * jjmpDinamis);
+          const semLabel = itemProta ? ` — Semester ${itemProta.semester}` : (unit.semester ? ` — Semester ${unit.semester}` : '');
+          const kartu = buatKartuSatuRppm(
+            `(${unit.kodeAtp} / ${unit.kodeTp}${semLabel})`,
+            unit.materiInduk || unit.materi,
+            `[${unit.kodeAtp} / ${unit.kodeTp}] ${unit.rumusan}`,
+            `${jpUnit} JP (${jjmpDinamis} JP/Pertemuan)`,
+            pertUnit,
+            kursorPertemuan
+          );
+          kursorPertemuan += pertUnit;
+          return kartu;
+        }).join('');
+      } else {
+        const idxUnit = parseInt(pilihanUnit, 10);
+        const jjmpDinamis = hitungJjmpUniversalRppm();
+        let pertMulai = 1;
+        if (!isNaN(idxUnit) && hasilCpTerakhir?.atpTerstruktur) {
+          for (let i = 0; i < idxUnit; i++) {
+            const mggItem = stateAmeProtaProsem?.items?.[i]?.minggu;
+            const jpItem = hasilCpTerakhir.atpTerstruktur[i]?.jp || jjmpDinamis;
+            pertMulai += Math.max(1, parseInt(mggItem, 10) || Math.round(jpItem / jjmpDinamis));
+          }
+        }
+        htmlRppm = buatKartuSatuRppm('', topik, tp, alokasiJp, jlhPertemuan, pertMulai);
+      }
 
       document.getElementById('dokumenRppmPrint').innerHTML = htmlRppm;
       document.getElementById('wadahHasilRppmAi').style.display = 'block';
