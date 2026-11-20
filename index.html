@@ -1080,8 +1080,20 @@
               *Jalankan Tahap 1 (Analisis Struktur Kurikulum &amp; Kaldik) terlebih dahulu untuk mengaktifkan tombol Generate.
             </span>
             <button type="button" id="btnGenerateAmeUtama" class="btn btn-primary" disabled style="opacity: 0.55; cursor: not-allowed;" onclick="prosesAnalisisKaldikDanGenerate()">
-              2. Generate Otomatis AME, PROTA &amp; PROSEM
+              2. Generate Otomatis Terpadu: AME, PROTA &amp; PROSEM
             </button>
+          </div>
+
+          <!-- INDIKATOR KETERHUBUNGAN TERPADU CP/ATP -> AME -> PROTA -> PROSEM -->
+          <div id="panelRantaiTerpaduAme" style="margin-top: 14px; padding: 10px 14px; background: #e6f0fa; border: 1px solid #93c5fd; border-radius: 8px; font-size: 12px; color: #093358; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <div>
+              <b>Rantai Sinkronisasi Terpadu:</b>
+              <span id="statusRantaiCp">1. CP &amp; ATP (Menunggu)</span> &rarr;
+              <span id="statusRantaiAme">2. AME Pagu JP (Menunggu)</span> &rarr;
+              <span id="statusRantaiProta">3. PROTA (Terhubung)</span> &rarr;
+              <span id="statusRantaiProsem">4. PROSEM Ganjil/Genap (Terhubung)</span>
+            </div>
+            <span class="badge badge-blue">Satu Sumber Data</span>
           </div>
         </div>
       </div>
@@ -1813,21 +1825,43 @@
     }
 
     function ekstrakTopikDariCp(teksCp, mapel) {
-      // Membersihkan frasa pembuka standar BSKAP tanpa membuang substansi kalimat
-      let bersih = teksCp
-        .replace(/pada akhir fase [a-f][,.]?\s*/gi, '')
-        .replace(/peserta didik (memiliki kemampuan|mampu|dapat)\s*/gi, '')
-        .replace(/menciptakan solusi atas permasalahan-permasalahan berdasarkan isu lokal, nasional atau global terkait pemahaman\s*/gi, '')
-        .replace(/terkait pemahaman\s*/gi, '')
-        .trim();
+      // 1. Bersihkan label administratif seperti "Elemen : ...", "Capaian Pembelajaran (CP):", dan bullet simbol
+      const barisBersih = teksCp
+        .split(/\r?\n/)
+        .map(baris => baris.trim())
+        .filter(baris => {
+          if (!baris) return false;
+          if (/^(elemen|capaian pembelajaran|cp|deskripsi|fase\s+[a-f])\s*[:\-]?\s*$/i.test(baris)) return false;
+          if (/^capaian pembelajaran\s*\(?cp\)?\s*[:\-]?$/i.test(baris)) return false;
+          return true;
+        })
+        .map(baris => {
+          return baris
+            .replace(/^[•\-\*\u2022\u25CF\d+\.\)]+\s*/g, '')
+            .replace(/^(elemen|capaian pembelajaran\s*\(?cp\)?)\s*[:\-]\s*/i, '')
+            .replace(/^pada akhir fase [a-f][,.]?\s*/gi, '')
+            .replace(/^peserta didik\s+(memiliki kemampuan|mampu|dapat)\s*/gi, '')
+            .replace(/^(mampu|dapat)\s+/gi, '')
+            .trim();
+        })
+        .filter(baris => baris.length >= 5);
 
-      // Memecah klausa materi berdasarkan tanda baca dan kata hubung utama
-      const potongan = bersih
+      const gabunganKalimat = barisBersih.join('; ');
+
+      // 2. Pecah klausa materi berdasarkan tanda baca utama tanpa membatasi jumlah untuk 1 tahun ajaran penuh
+      const potongan = gabunganKalimat
         .split(/,|;|\.\s+|\s+dan\s+|\s+serta\s+/i)
-        .map(s => s.trim().replace(/\.$/, ''))
-        .filter(s => s.length >= 6 && !/^(pada akhir|peserta didik|secara|melalui|dengan|untuk|dalam)$/i.test(s));
+        .map(s => {
+          return s
+            .replace(/^[•\-\*\u2022\u25CF\d+\.\)]+\s*/g, '')
+            .replace(/^(elemen|capaian pembelajaran\s*\(?cp\)?)\s*[:\-]\s*/gi, '')
+            .replace(/^(memahami|mengidentifikasi|menganalisis|mengevaluasi|merancang|merencanakan|menerapkan|melakukan|menjelaskan|menguraikan|menggunakan|membuat|menyajikan|mempraktikkan)\s+/i, '')
+            .replace(/\.$/, '')
+            .trim();
+        })
+        .filter(s => s.length >= 5 && !/^(pada akhir|peserta didik|secara|melalui|dengan|untuk|dalam|capaian pembelajaran|elemen)$/i.test(s));
 
-      // Menghapus duplikat sambil mempertahankan urutan substansi CP
+      // 3. Pertahankan seluruh topik esensial 1 tahun ajaran (tanpa pemotongan slice(0,6))
       const unik = [];
       potongan.forEach(item => {
         const kapital = item.charAt(0).toUpperCase() + item.slice(1);
@@ -1837,13 +1871,15 @@
       });
 
       if (unik.length >= 2) {
-        return unik.slice(0, 6);
+        return unik;
       }
       return [
         `Konsep Dasar dan Ruang Lingkup ${mapel}`,
-        `Analisis Unsur dan Mekanisme Kerja ${mapel}`,
-        `Penerapan Prosedural dan Pemecahan Masalah ${mapel}`,
-        `Evaluasi dan Perancangan Karya Terapan ${mapel}`
+        `Identifikasi Komponen dan Prinsip Kerja ${mapel}`,
+        `Analisis Struktur, Mekanisme, dan Prosedur ${mapel}`,
+        `Penerapan Teknis dan Pemecahan Masalah Kontekstual ${mapel}`,
+        `Pengujian, Evaluasi Mutu, dan Pelaporan Hasil ${mapel}`,
+        `Perancangan Karya / Proyek Terapan ${mapel}`
       ];
     }
 
@@ -1910,27 +1946,36 @@
 
       const barisMateri = materiRaw
         .split('\n')
-        .map(b => b.replace(/^\d+[\.\)]\s*/, '').trim())
+        .map(b => b.replace(/^\d+[\.\)]\s*/, '').replace(/^[•\-\*]\s*/, '').trim())
         .filter(b => b.length > 0);
 
-      const konteksFase = fase.includes('SMK')
-        ? 'standar operasional prosedur (SOP) industri, K3LH, dan studi kasus dunia kerja'
-        : (fase.includes('Khusus') || fase.includes('SLB')
-          ? 'keterampilan fungsional bertahap, media konkret visual, dan kemandirian hidup sehari-hari'
-          : 'kajian konseptual, analisis fenomena lokal/global, dan pemecahan masalah berbasis literatur ilmiah');
+      const isSmk = fase.includes('SMK');
+      const isSlb = fase.includes('Khusus') || fase.includes('SLB');
 
       const hasilJabaran = barisMateri.map((pokok, idx) => {
-        return `• Materi Pokok ${idx + 1}: ${pokok}\n` +
-          `  - Konsep Esensial & Prasyarat: Definisi operasional, karakteristik utama, serta klasifikasi komponen pada ${pokok}.\n` +
-          `  - Pendalaman & Referensi Terapan: Mekanisme kerja, keterkaitan antar-konsep ${mapel}, serta kajian ${konteksFase}.\n` +
-          `  - Konteks Pemecahan Masalah: Studi kasus nyata, analisis data/fenomena, dan perancangan solusi aplikatif terkait ${pokok}.`;
+        const sub1 = `Konsep dasar, definisi operasional, dan klasifikasi komponen utama pada ${pokok}`;
+        const sub2 = isSmk
+          ? `Standar Operasional Prosedur (SOP), parameter teknis, dan penerapan K3LH dalam ${pokok}`
+          : (isSlb
+            ? `Pengenalan alat/media konkret dan langkah fungsional bertahap pada ${pokok}`
+            : `Prinsip kerja, hubungan antar-konsep ${mapel}, dan kajian fenomena pada ${pokok}`);
+        const sub3 = isSmk
+          ? `Perancangan, implementasi praktik kerja, dan pengujian hasil karya berbasis kasus industri pada ${pokok}`
+          : (isSlb
+            ? `Praktik mandiri terbimbing dan pembiasaan positif dalam aktivitas ${pokok}`
+            : `Analisis studi kasus nyata, evaluasi pemecahan masalah, dan penyajian solusi terkait ${pokok}`);
+
+        return `Materi Pokok ${idx + 1}: ${pokok}\n` +
+          `  1) Submateri ${idx + 1}.1: ${sub1}\n` +
+          `  2) Submateri ${idx + 1}.2: ${sub2}\n` +
+          `  3) Submateri ${idx + 1}.3: ${sub3}`;
       }).join('\n\n');
 
       document.getElementById('genInputJabaranMateri').value = hasilJabaran;
       validasiKesiapanGenerateCp();
 
       if (tampilkanNotif) {
-        tampilkanToast('Penjabaran Materi Pokok berhasil diperbarui!', 'success');
+        tampilkanToast(`Penjabaran ${barisMateri.length} Materi Pokok (${barisMateri.length * 3} Submateri) berhasil diperbarui!`, 'success');
       }
     }
 
@@ -1971,19 +2016,18 @@
         return;
       }
 
-      // Mengambil daftar Materi Pokok langsung dari input yang sudah divalidasi/diedit guru
+      // Mengambil SELURUH daftar Materi Pokok tanpa pembatasan jumlah (untuk 1 tahun ajaran penuh)
       const topikList = materiPokokRaw
         .split('\n')
-        .map(b => b.replace(/^\d+[\.\)]\s*/, '').trim())
+        .map(b => b.replace(/^\d+[\.\)]\s*/, '').replace(/^[•\-\*]\s*/, '').trim())
         .filter(b => b.length > 0);
 
-      // Mengurai blok Penjabaran Materi Pokok per item
+      // Mengurai blok Penjabaran Materi Pokok beserta seluruh butir submaterinya
       const blokJabaran = jabaranMateriRaw
         .split(/\n\s*\n/)
         .map(b => b.trim())
         .filter(b => b.length > 0);
 
-      // Ekstraksi KKO eksplisit dari CP + pengembangan Bloom & SOLO yang selaras substansi CP
       const kamusKko = [
         { kko: 'Mengidentifikasi & Mendeskripsikan', bloom: 'C1–C2 (Mengingat & Memahami)', solo: 'Unistruktural' },
         { kko: 'Mengklasifikasikan & Menguraikan', bloom: 'C2–C3 (Memahami & Menerapkan)', solo: 'Multistruktural' },
@@ -1992,40 +2036,73 @@
         { kko: 'Merancang & Menciptakan Solusi', bloom: 'C6 (Mencipta)', solo: 'Extended Abstract' }
       ];
 
-      // 1. ANALISIS KKO DUAL-TAKSONOMI (BLOOM & SOLO) BERDASARKAN MATERI POKOK & PENJABARANNYA
+      // 1. ANALISIS KKO DUAL-TAKSONOMI (BLOOM & SOLO) + EKSTRAKSI SEMUA SUBMATERI
       const daftarKko = topikList.map((materiItem, idx) => {
-        const level = kamusKko[Math.min(idx, kamusKko.length - 1)];
-        const detailJabaran = blokJabaran[idx]
-          ? blokJabaran[idx].replace(/^•\s*Materi Pokok \d+:[^\n]*\n?/i, '').replace(/\n/g, '<br>')
-          : `Konsep dasar, parameter teknis, studi kasus kontekstual, dan penerapan nyata pada <b>${materiItem}</b>.`;
+        const rasioLevel = topikList.length <= 1 ? 0 : Math.floor((idx / (topikList.length - 1)) * (kamusKko.length - 1));
+        const level = kamusKko[Math.min(rasioLevel, kamusKko.length - 1)];
+
+        const blokTeks = blokJabaran[idx] || '';
+        const barisSub = blokTeks
+          .split('\n')
+          .slice(1)
+          .map(s => s.replace(/^\s*(?:\d+[\.\)]|[\-\*•])\s*(?:Submateri\s*\d+\.\d+\s*:\s*)?/i, '').replace(/\.$/, '').trim())
+          .filter(s => s.length > 3);
+
+        const submateriFinal = barisSub.length > 0
+          ? barisSub
+          : [
+              `Konsep dasar dan komponen utama pada ${materiItem}`,
+              `Prosedur kerja dan mekanisme penerapan ${materiItem}`,
+              `Analisis kasus dan pemecahan masalah terkait ${materiItem}`
+            ];
+
+        const detailJabaranHtml = submateriFinal
+          .map((sub, sIdx) => `• <b>Submateri ${idx + 1}.${sIdx + 1}:</b> ${sub}.`)
+          .join('<br>');
+
         return {
           kko: level.kko,
           bloom: level.bloom,
           solo: level.solo,
           materi: materiItem,
-          detailJabaran
+          submateriList: submateriFinal,
+          detailJabaran: detailJabaranHtml
         };
       });
 
-      // 2. RUMUSAN TUJUAN PEMBELAJARAN (TP.01 - TP.0n) YANG MENYAMBUNG LANGSUNG KE MATERI POKOK
-      const daftarTp = daftarKko.map((item, idx) => {
-        const kode = `TP.0${idx + 1}`;
-        const jp = (idx === daftarKko.length - 1) ? 12 : (idx >= 2 ? 9 : 6);
-        return {
-          kode,
-          materi: item.materi,
-          kko: item.kko,
-          bloom: item.bloom,
-          solo: item.solo,
-          jp,
-          rumusan: `Peserta didik mampu ${item.kko.toLowerCase()} ${item.materi} secara sistematis, kritis, dan kontekstual sesuai tuntutan ${fase}.`
-        };
+      // 2. RUMUSAN TUJUAN PEMBELAJARAN (TP) = KOMPETENSI (KKO) + MATERI (JABARAN SUBMATERI)
+      // Tanpa membatasi jumlah TP agar mencakup seluruh jabaran submateri untuk 1 tahun ajaran
+      const daftarTp = [];
+      let nomorTp = 1;
+
+      daftarKko.forEach((item) => {
+        item.submateriList.forEach((subMateri, subIdx) => {
+          const kkoSub = subIdx === 0
+            ? 'mengidentifikasi dan menjelaskan'
+            : (subIdx === 1
+              ? item.kko.toLowerCase()
+              : 'menganalisis, mengevaluasi, dan menerapkan');
+          const kode = nomorTp < 10 ? `TP.0${nomorTp}` : `TP.${nomorTp}`;
+          nomorTp++;
+
+          daftarTp.push({
+            kode,
+            materi: `${item.materi} (${subMateri})`,
+            materiInduk: item.materi,
+            subMateri,
+            kko: kkoSub,
+            bloom: item.bloom,
+            solo: item.solo,
+            jp: 4,
+            rumusan: `Peserta didik mampu ${kkoSub} ${subMateri} pada lingkup ${item.materi} secara tepat, kritis, dan kontekstual sesuai tuntutan ${fase}.`
+          });
+        });
       });
 
-      // 3. PENYUSUNAN ATP BERDASARKAN TEKNIK & PRINSIP RESMI
+      // 3. PENYUSUNAN ATP BERDASARKAN TEKNIK & PRINSIP RESMI (MENCAKUP SELURUH TP 1 TAHUN)
       let teknikFinal = teknikDipilih;
       if (teknikFinal === 'Otomatis') {
-        if (fase.includes('SMK') || mapel.toLowerCase().includes('praktik') || mapel.toLowerCase().includes('desain')) {
+        if (fase.includes('SMK') || mapel.toLowerCase().includes('praktik') || mapel.toLowerCase().includes('desain') || mapel.toLowerCase().includes('jaringan')) {
           teknikFinal = 'Prosedural';
         } else if (fase.includes('Khusus') || fase.includes('SLB')) {
           teknikFinal = 'Scaffolding';
@@ -2041,14 +2118,13 @@
         urutanAtp = [daftarTp[1], daftarTp[0], ...daftarTp.slice(2)];
         rasionalAtp = 'Disusun secara Deduktif: diawali dari pemahaman klasifikasi/prinsip umum sebelum mengerucut pada identifikasi komponen spesifik dan penerapan proyek.';
       } else if (teknikFinal === 'Prosedural' && daftarTp.length >= 3) {
-        urutanAtp = [daftarTp[0], daftarTp[2], daftarTp[1], ...daftarTp.slice(3)];
-        rasionalAtp = 'Disusun secara Prosedural: mengikuti urutan langkah kerja operasional mulai dari persiapan alat/bahan, pelaksanaan proses, hingga pengujian dan evaluasi hasil.';
+        rasionalAtp = 'Disusun secara Prosedural: mengikuti urutan langkah kerja operasional mulai dari pemahaman konsep & SOP, pelaksanaan teknis, hingga pengujian dan evaluasi hasil.';
       } else if (teknikFinal === 'Scaffolding') {
         rasionalAtp = 'Disusun dengan teknik Scaffolding: memberikan pendampingan terstruktur pada tahap awal dan mengurangi bimbingan secara bertahap hingga peserta didik mandiri berkarya.';
       } else if (teknikFinal === 'Hierarki') {
         rasionalAtp = 'Disusun secara Hierarkis: menuntaskan kompetensi prasyarat mendasar terlebih dahulu sebelum melanjutkan ke tingkat analisis dan sintesis yang lebih tinggi.';
       } else {
-        rasionalAtp = `Disusun menggunakan metode ${teknikFinal}: alur bergerak linear satu arah dari pengenalan fenomena nyata/konkret menuju analisis konseptual hingga tuntas satu fase.`;
+        rasionalAtp = `Disusun menggunakan metode ${teknikFinal}: alur bergerak linear satu arah dari pengenalan fenomena nyata/konkret menuju analisis konseptual hingga tuntas satu fase penuh.`;
       }
 
       const atpTerstruktur = urutanAtp.map((tp, idx) => ({
@@ -2056,19 +2132,15 @@
         kodeAtp: `ATP-${idx + 1}`,
         kodeTp: tp.kode,
         materi: tp.materi,
+        materiInduk: tp.materiInduk,
         rumusan: tp.rumusan,
         jp: tp.jp,
         semester: idx < Math.ceil(urutanAtp.length / 2) ? 'Ganjil' : 'Genap',
         sedangEditJp: false
       }));
 
-      // Jika AME & PROTA sudah pernah di-generate sebelumnya, samakan alokasi JP ATP dengan PROTA
-      if (stateAmeProtaProsem && stateAmeProtaProsem.items && stateAmeProtaProsem.items.length === atpTerstruktur.length) {
-        atpTerstruktur.forEach((a, idx) => {
-          a.jp = stateAmeProtaProsem.items[idx].jp;
-          a.semester = stateAmeProtaProsem.items[idx].semester;
-        });
-      } else if (stateAmeProtaProsem && stateAmeProtaProsem.totalPaguJtm > 0) {
+      // Jika AME & PROTA sudah pernah di-generate sebelumnya, langsung sambungkan ulang agar tidak terpisah
+      if (stateAmeProtaProsem && stateAmeProtaProsem.totalPaguJtm > 0) {
         const paguTarget = stateAmeProtaProsem.totalPaguJtm;
         const dasarJp = Math.floor(paguTarget / atpTerstruktur.length);
         const sisaJp = paguTarget % atpTerstruktur.length;
@@ -2099,7 +2171,7 @@
               <th style="width:5%;">No</th>
               <th style="width:24%;">Kata Kerja Operasional (KKO)</th>
               <th style="width:20%;">Taksonomi Bloom &amp; SOLO</th>
-              <th>Materi Pokok &amp; Penjabaran Submateri Esensial (Sesuai CP)</th>
+              <th>Materi Pokok &amp; Penjabaran Submateri Esensial (1 Tahun Ajaran)</th>
             </tr>
           </thead>
           <tbody>
@@ -2109,7 +2181,7 @@
                 <td><b>${k.kko}</b></td>
                 <td><b>Bloom:</b> ${k.bloom}<br><b>SOLO:</b> ${k.solo}</td>
                 <td>
-                  <b>Materi Pokok: ${k.materi}</b><br>
+                  <b>Materi Pokok ${i + 1}: ${k.materi}</b><br>
                   <div style="font-size:11.5px; color:#334155; margin-top:4px;">${k.detailJabaran}</div>
                 </td>
               </tr>
@@ -2118,13 +2190,13 @@
         </table>
       `;
 
-      // RENDER TABEL BAGIAN II
+      // RENDER TABEL BAGIAN II (KOMPETENSI KKO + JABARAN SUBMATERI)
       document.getElementById('outStagger2').innerHTML = `
         <table>
           <thead>
             <tr>
-              <th style="width:12%;">Kode TP</th>
-              <th>Rumusan Tujuan Pembelajaran (Kompetensi + Lingkup Materi)</th>
+              <th style="width:11%;">Kode TP</th>
+              <th>Rumusan Tujuan Pembelajaran (Kompetensi KKO + Jabaran Submateri)</th>
               <th style="width:18%;">Level Kognitif</th>
             </tr>
           </thead>
@@ -2143,6 +2215,12 @@
       // RENDER TABEL BAGIAN III (TERSINKRON DENGAN PAGU AME & PROTA)
       renderTabelBagian3Atp();
 
+      // Jika AME/PROTA/PROSEM sudah aktif, otomatis regenerasi agar selalu terhubung
+      if (statusStrukturTeranalisis && stateAmeProtaProsem) {
+        prosesAnalisisKaldikDanGenerate();
+      }
+      perbaruiIndikatorRantaiTerpadu();
+
       // SINKRON IDENTITAS & PENGESAHAN DARI PROFIL GURU
       const kepsekProfil = penggunaAktif?.namaKepsek || '';
       const nipKepsekProfil = penggunaAktif?.nipKepsek || '';
@@ -2160,7 +2238,31 @@
 
       document.getElementById('wadahHasilDokumenCp').style.display = 'block';
       document.getElementById('wadahHasilDokumenCp').scrollIntoView({ behavior: 'smooth' });
-      tampilkanToast('Analisis CP, TP & ATP berhasil dibuat!', 'success');
+      tampilkanToast(`Berhasil menganalisis ${topikList.length} Materi Pokok menjadi ${daftarTp.length} Tujuan Pembelajaran (TP) & ATP 1 Tahun Ajaran!`, 'success');
+    }
+
+    function perbaruiIndikatorRantaiTerpadu() {
+      const elCp = document.getElementById('statusRantaiCp');
+      const elAme = document.getElementById('statusRantaiAme');
+      const elProta = document.getElementById('statusRantaiProta');
+      const elProsem = document.getElementById('statusRantaiProsem');
+      if (!elCp || !elAme || !elProta || !elProsem) return;
+
+      if (hasilCpTerakhir && hasilCpTerakhir.atpTerstruktur) {
+        elCp.innerHTML = `<b style="color:#16a34a;">1. CP &amp; ATP (${hasilCpTerakhir.atpTerstruktur.length} TP/ATP) ✓</b>`;
+      } else {
+        elCp.innerHTML = `1. CP &amp; ATP (Belum diisi)`;
+      }
+
+      if (stateAmeProtaProsem && stateAmeProtaProsem.totalPaguJtm > 0) {
+        elAme.innerHTML = `<b style="color:#16a34a;">2. AME (${stateAmeProtaProsem.totalPaguJtm} JP) ✓</b>`;
+        elProta.innerHTML = `<b style="color:#16a34a;">3. PROTA (${stateAmeProtaProsem.items.length} Unit) ✓</b>`;
+        elProsem.innerHTML = `<b style="color:#16a34a;">4. PROSEM Ganjil &amp; Genap ✓</b>`;
+      } else {
+        elAme.innerHTML = `2. AME Pagu JP (Menunggu)`;
+        elProta.innerHTML = `3. PROTA (Terhubung ke AME &amp; ATP)`;
+        elProsem.innerHTML = `4. PROSEM (Terhubung ke PROTA)`;
+      }
     }
 
     function renderTabelBagian3Atp() {
@@ -3115,10 +3217,11 @@
       }
 
       renderDokumenProtaDanProsem();
+      perbaruiIndikatorRantaiTerpadu();
 
       document.getElementById('wadahHasilAmeProtaProsem').style.display = 'block';
       document.getElementById('wadahHasilAmeProtaProsem').scrollIntoView({ behavior: 'smooth' });
-      tampilkanToast('AME, PROTA & PROSEM berhasil di-generate & diselaraskan dengan Pagu AME serta ATP!', 'success');
+      tampilkanToast('AME, PROTA & PROSEM terhubung dalam satu rantai data utuh!', 'success');
     }
 
     function toggleEditAlokasiUnit(indexUnit) {
