@@ -695,28 +695,6 @@
               <label class="form-label">Nama Lengkap Pendidik (Beserta Gelar) *</label>
               <input type="text" id="regNama" class="form-input" placeholder="Contoh: Ahmad Husairi, S.Pd., M.Pd" required>
             </div>
-            <div class="grid-2">
-              <div class="form-group">
-                <label class="form-label">NIP / NUPTK / NIK</label>
-                <input type="text" id="regNip" class="form-input" placeholder="Contoh: 197007171994121001">
-              </div>
-              <div class="form-group">
-                <label class="form-label">Fokus Jenjang *</label>
-                <select id="regJenjang" class="form-select">
-                  <option value="SMA">SMA (Sekolah Menengah Atas)</option>
-                  <option value="SMK">SMK (Sekolah Menengah Kejuruan)</option>
-                  <option value="SLB">SLB (Sekolah Luar Biasa)</option>
-                </select>
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Asal Satuan Pendidikan (Sekolah) *</label>
-              <input type="text" id="regSekolah" class="form-input" placeholder="Contoh: SMKN 1 Tanjung Tiram" required>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Mata Pelajaran yang Diampu *</label>
-              <input type="text" id="regMapel" class="form-input" placeholder="Contoh: Biologi / Dasar-Dasar Kejuruan" required>
-            </div>
             <div class="form-group">
               <label class="form-label">Surel (Email) belajar.id / Pribadi *</label>
               <input type="email" id="regEmail" class="form-input" placeholder="Contoh: guru@guru.smk.belajar.id" required>
@@ -725,6 +703,9 @@
               <label class="form-label">Buat Kata Sandi *</label>
               <input type="password" id="regPass" class="form-input" placeholder="Minimal 4 karakter" required>
             </div>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">
+              *Data NIP, Jenjang, Satuan Pendidikan, dan Mata Pelajaran dapat dilengkapi setelah masuk pada halaman <b>Dashboard &amp; Profil Guru</b>.
+            </p>
             <button type="submit" class="btn btn-accent" style="width: 100%;">
               Simpan Pendaftaran &amp; Masuk
             </button>
@@ -1570,32 +1551,29 @@
     // =========================================================================
     function prosesDaftarMandiri() {
       const nama = document.getElementById('regNama').value.trim();
-      const nip = document.getElementById('regNip').value.trim();
-      const sekolah = document.getElementById('regSekolah').value.trim();
-      const jenjang = document.getElementById('regJenjang').value;
-      const mapel = document.getElementById('regMapel').value.trim();
       const email = document.getElementById('regEmail').value.trim().toLowerCase();
       const pass = document.getElementById('regPass').value;
 
-      if (!nama || !sekolah || !mapel || !email || !pass) {
-        tampilkanToast('Mohon lengkapi seluruh kolom pendaftaran wajib!', 'warning');
+      if (!nama || !email || !pass) {
+        tampilkanToast('Mohon lengkapi Nama Lengkap, Alamat Surel, dan Kata Sandi!', 'warning');
         return;
       }
 
       const daftarGuru = dapatkanAkunTersimpan();
       const idx = daftarGuru.findIndex(g => g.email.toLowerCase() === email);
+      const akunLama = idx !== -1 ? daftarGuru[idx] : {};
 
       const profilBaru = {
         nama,
-        nip: nip || '-',
-        sekolah,
-        jenjang,
-        mapel,
+        nip: akunLama.nip || '-',
+        sekolah: akunLama.sekolah || '',
+        jenjang: akunLama.jenjang || 'SMA',
+        mapel: akunLama.mapel || '',
         email,
         pass,
-        namaKepsek: idx !== -1 ? (daftarGuru[idx].namaKepsek || '') : '',
-        nipKepsek: idx !== -1 ? (daftarGuru[idx].nipKepsek || '') : '',
-        kotaTanggal: idx !== -1 ? (daftarGuru[idx].kotaTanggal || '') : ''
+        namaKepsek: akunLama.namaKepsek || '',
+        nipKepsek: akunLama.nipKepsek || '',
+        kotaTanggal: akunLama.kotaTanggal || ''
       };
 
       if (idx !== -1) daftarGuru[idx] = profilBaru;
@@ -1603,7 +1581,7 @@
 
       simpanDaftarAkun(daftarGuru);
       aktifkanSesiGuru(profilBaru);
-      tampilkanToast(`Pendaftaran berhasil & tersimpan permanen! Selamat datang, ${nama}.`, 'success');
+      tampilkanToast(`Pendaftaran berhasil! Silakan lengkapi data sekolah & mapel pada Profil Guru.`, 'success');
     }
 
     function prosesLoginManual() {
