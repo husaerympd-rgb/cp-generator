@@ -1883,6 +1883,99 @@
       ];
     }
 
+    function ekstrakKkoAsliDariDeskripsiCp(teksCp, materiItem) {
+      // Kamus kata kerja operasional resmi BSKAP beserta pemetaan level Bloom & SOLO
+      const kamusVerbaCp = [
+        { pola: /\b(merancang|menciptakan|membuat|menyusun|mengembangkan|memproduksi|membangun|mengkonstruksi|merencanakan)\b/gi, bloom: 'C6 (Mencipta)', solo: 'Extended Abstract' },
+        { pola: /\b(mengevaluasi|menilai|menguji|membandingkan|mengkritisi|memvalidasi|memutuskan|membuktikan)\b/gi, bloom: 'C5 (Mengevaluasi)', solo: 'Relasional Lanjut' },
+        { pola: /\b(menganalisis|menghubungkan|menelaah|memecahkan|menguraikan|mendiagnosis|mengaitkan|menyelidiki)\b/gi, bloom: 'C4 (Menganalisis)', solo: 'Relasional' },
+        { pola: /\b(menerapkan|mengoperasikan|mempraktikkan|melakukan|menggunakan|menghitung|mengimplementasikan|menyajikan|mendemonstrasikan|mengolah)\b/gi, bloom: 'C3 (Menerapkan)', solo: 'Multistruktural' },
+        { pola: /\b(mengklasifikasikan|membedakan|menjelaskan|mendeskripsikan|mengidentifikasi|memahami|menyebutkan|mengenali|menunjukkan|mengamati)\b/gi, bloom: 'C1–C2 (Mengingat & Memahami)', solo: 'Unistruktural' }
+      ];
+
+      // Cari kalimat/klausa dalam teks CP yang mengandung frasa materiItem
+      const kalimatList = teksCp
+        .split(/[\n\.;]+/)
+        .map(k => k.trim())
+        .filter(k => k.length > 0);
+
+      const kataKunciMateri = materiItem
+        .toLowerCase()
+        .split(/\s+/)
+        .filter(w => w.length >= 4 && !/^(pada|akhir|fase|peserta|didik|mampu|dapat|secara|dengan|untuk|dalam|yang|dan|atau)$/.test(w));
+
+      let kalimatRelevan = '';
+      let skorTerbaik = 0;
+      kalimatList.forEach(kal => {
+        const kalLower = kal.toLowerCase();
+        let skor = 0;
+        kataKunciMateri.forEach(kw => {
+          if (kalLower.includes(kw)) skor++;
+        });
+        if (skor > skorTerbaik) {
+          skorTerbaik = skor;
+          kalimatRelevan = kal;
+        }
+      });
+
+      const sumberPencarian = kalimatRelevan || teksCp;
+      const verbaDitemukan = [];
+      let bloomTerpilih = 'C2–C3 (Memahami & Menerapkan)';
+      let soloTerpilih = 'Multistruktural';
+
+      kamusVerbaCp.forEach(entry => {
+        const matches = sumberPencarian.match(entry.pola);
+        if (matches && matches.length > 0) {
+          matches.forEach(m => {
+            const kataKapital = m.charAt(0).toUpperCase() + m.slice(1).toLowerCase();
+            if (!verbaDitemukan.includes(kataKapital)) {
+              verbaDitemukan.push(kataKapital);
+            }
+          });
+          // Ambil level tertinggi yang muncul di deskripsi CP untuk elemen tersebut
+          if (verbaDitemukan.length === matches.length) {
+            bloomTerpilih = entry.bloom;
+            soloTerpilih = entry.solo;
+          }
+        }
+      });
+
+      // Jika kalimat spesifik tidak menyebut kata kerja eksplisit, cari dari keseluruhan paragraf elemen CP
+      if (verbaDitemukan.length === 0) {
+        kamusVerbaCp.forEach(entry => {
+          const matchesAll = teksCp.match(entry.pola);
+          if (matchesAll && matchesAll.length > 0) {
+            matchesAll.forEach(m => {
+              const kataKapital = m.charAt(0).toUpperCase() + m.slice(1).toLowerCase();
+              if (!verbaDitemukan.includes(kataKapital)) {
+                verbaDitemukan.push(kataKapital);
+              }
+            });
+            if (verbaDitemukan.length === matchesAll.length) {
+              bloomTerpilih = entry.bloom;
+              soloTerpilih = entry.solo;
+            }
+          }
+        });
+      }
+
+      if (verbaDitemukan.length > 0) {
+        return {
+          kko: verbaDitemukan.slice(0, 3).join(' & '),
+          bloom: bloomTerpilih,
+          solo: soloTerpilih,
+          sumberKalimat: kalimatRelevan
+        };
+      }
+
+      return {
+        kko: 'Memahami & Menerapkan',
+        bloom: 'C2–C3 (Memahami & Menerapkan)',
+        solo: 'Multistruktural',
+        sumberKalimat: kalimatRelevan
+      };
+    }
+
     function handlePerubahanTeksCp() {
       validasiKesiapanGenerateCp();
       clearTimeout(timerDebounceCp);
@@ -2028,18 +2121,9 @@
         .map(b => b.trim())
         .filter(b => b.length > 0);
 
-      const kamusKko = [
-        { kko: 'Mengidentifikasi & Mendeskripsikan', bloom: 'C1–C2 (Mengingat & Memahami)', solo: 'Unistruktural' },
-        { kko: 'Mengklasifikasikan & Menguraikan', bloom: 'C2–C3 (Memahami & Menerapkan)', solo: 'Multistruktural' },
-        { kko: 'Menganalisis & Menghubungkan', bloom: 'C4 (Menganalisis)', solo: 'Relasional' },
-        { kko: 'Mengevaluasi & Membandingkan', bloom: 'C5 (Mengevaluasi)', solo: 'Relasional Lanjut' },
-        { kko: 'Merancang & Menciptakan Solusi', bloom: 'C6 (Mencipta)', solo: 'Extended Abstract' }
-      ];
-
-      // 1. ANALISIS KKO DUAL-TAKSONOMI (BLOOM & SOLO) + EKSTRAKSI SEMUA SUBMATERI
+      // 1. ANALISIS KKO ASLI DARI DESKRIPSI ELEMEN CP (TIDAK MENGARANG) + EKSTRAKSI SEMUA SUBMATERI
       const daftarKko = topikList.map((materiItem, idx) => {
-        const rasioLevel = topikList.length <= 1 ? 0 : Math.floor((idx / (topikList.length - 1)) * (kamusKko.length - 1));
-        const level = kamusKko[Math.min(rasioLevel, kamusKko.length - 1)];
+        const hasilKkoCp = ekstrakKkoAsliDariDeskripsiCp(teksCp, materiItem);
 
         const blokTeks = blokJabaran[idx] || '';
         const barisSub = blokTeks
@@ -2061,27 +2145,24 @@
           .join('<br>');
 
         return {
-          kko: level.kko,
-          bloom: level.bloom,
-          solo: level.solo,
+          kko: hasilKkoCp.kko,
+          bloom: hasilKkoCp.bloom,
+          solo: hasilKkoCp.solo,
           materi: materiItem,
           submateriList: submateriFinal,
-          detailJabaran: detailJabaranHtml
+          detailJabaran: detailJabaranHtml,
+          sedangEdit: false
         };
       });
 
-      // 2. RUMUSAN TUJUAN PEMBELAJARAN (TP) = KOMPETENSI (KKO) + MATERI (JABARAN SUBMATERI)
-      // Tanpa membatasi jumlah TP agar mencakup seluruh jabaran submateri untuk 1 tahun ajaran
+      // 2. RUMUSAN TUJUAN PEMBELAJARAN (TP) = KOMPETENSI (KKO ASLI CP) + MATERI (JABARAN SUBMATERI)
       const daftarTp = [];
       let nomorTp = 1;
 
       daftarKko.forEach((item) => {
+        const pecahanVerba = item.kko.split(/\s*&\s*/).map(v => v.toLowerCase().trim()).filter(Boolean);
         item.submateriList.forEach((subMateri, subIdx) => {
-          const kkoSub = subIdx === 0
-            ? 'mengidentifikasi dan menjelaskan'
-            : (subIdx === 1
-              ? item.kko.toLowerCase()
-              : 'menganalisis, mengevaluasi, dan menerapkan');
+          const verbaTerpilih = pecahanVerba[subIdx % pecahanVerba.length] || item.kko.toLowerCase();
           const kode = nomorTp < 10 ? `TP.0${nomorTp}` : `TP.${nomorTp}`;
           nomorTp++;
 
@@ -2090,11 +2171,12 @@
             materi: `${item.materi} (${subMateri})`,
             materiInduk: item.materi,
             subMateri,
-            kko: kkoSub,
+            kko: verbaTerpilih,
             bloom: item.bloom,
             solo: item.solo,
             jp: 4,
-            rumusan: `Peserta didik mampu ${kkoSub} ${subMateri} pada lingkup ${item.materi} secara tepat, kritis, dan kontekstual sesuai tuntutan ${fase}.`
+            rumusan: `Peserta didik mampu ${verbaTerpilih} ${subMateri} pada lingkup ${item.materi} secara tepat, kritis, dan kontekstual sesuai tuntutan ${fase}.`,
+            sedangEdit: false
           });
         });
       });
@@ -2136,7 +2218,7 @@
         rumusan: tp.rumusan,
         jp: tp.jp,
         semester: idx < Math.ceil(urutanAtp.length / 2) ? 'Ganjil' : 'Genap',
-        sedangEditJp: false
+        sedangEdit: false
       }));
 
       // Jika AME & PROTA sudah pernah di-generate sebelumnya, langsung sambungkan ulang agar tidak terpisah
@@ -2163,56 +2245,9 @@
         atpTerstruktur
       };
 
-      // RENDER TABEL BAGIAN I
-      document.getElementById('outStagger1').innerHTML = `
-        <table>
-          <thead>
-            <tr>
-              <th style="width:5%;">No</th>
-              <th style="width:24%;">Kata Kerja Operasional (KKO)</th>
-              <th style="width:20%;">Taksonomi Bloom &amp; SOLO</th>
-              <th>Materi Pokok &amp; Penjabaran Submateri Esensial (1 Tahun Ajaran)</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${daftarKko.map((k, i) => `
-              <tr>
-                <td style="text-align:center;">${i + 1}</td>
-                <td><b>${k.kko}</b></td>
-                <td><b>Bloom:</b> ${k.bloom}<br><b>SOLO:</b> ${k.solo}</td>
-                <td>
-                  <b>Materi Pokok ${i + 1}: ${k.materi}</b><br>
-                  <div style="font-size:11.5px; color:#334155; margin-top:4px;">${k.detailJabaran}</div>
-                </td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      `;
-
-      // RENDER TABEL BAGIAN II (KOMPETENSI KKO + JABARAN SUBMATERI)
-      document.getElementById('outStagger2').innerHTML = `
-        <table>
-          <thead>
-            <tr>
-              <th style="width:11%;">Kode TP</th>
-              <th>Rumusan Tujuan Pembelajaran (Kompetensi KKO + Jabaran Submateri)</th>
-              <th style="width:18%;">Level Kognitif</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${daftarTp.map(tp => `
-              <tr>
-                <td style="text-align:center; font-weight:bold;">${tp.kode}</td>
-                <td>${tp.rumusan}</td>
-                <td style="text-align:center;">${tp.bloom.split(' ')[0]} (${tp.solo})</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      `;
-
-      // RENDER TABEL BAGIAN III (TERSINKRON DENGAN PAGU AME & PROTA)
+      // RENDER KETIGA TABEL DENGAN FITUR EDIT & HAPUS PER BARIS
+      renderTabelBagian1DekonstruksiCp();
+      renderTabelBagian2RumusanTp();
       renderTabelBagian3Atp();
 
       // Jika AME/PROTA/PROSEM sudah aktif, otomatis regenerasi agar selalu terhubung
@@ -2239,6 +2274,248 @@
       document.getElementById('wadahHasilDokumenCp').style.display = 'block';
       document.getElementById('wadahHasilDokumenCp').scrollIntoView({ behavior: 'smooth' });
       tampilkanToast(`Berhasil menganalisis ${topikList.length} Materi Pokok menjadi ${daftarTp.length} Tujuan Pembelajaran (TP) & ATP 1 Tahun Ajaran!`, 'success');
+    }
+
+    // =========================================================================
+    // RENDER & AKSI EDIT / HAPUS BARIS BAGIAN I, BAGIAN II, DAN BAGIAN III
+    // =========================================================================
+    function renderTabelBagian1DekonstruksiCp() {
+      const wadah = document.getElementById('outStagger1');
+      if (!wadah || !hasilCpTerakhir || !hasilCpTerakhir.daftarKko) return;
+
+      const rows = hasilCpTerakhir.daftarKko;
+      if (rows.length === 0) {
+        wadah.innerHTML = '<p style="font-size:12px; color:#64748b; font-style:italic;">Belum ada baris dekonstruksi CP.</p>';
+        return;
+      }
+
+      wadah.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th style="width:5%;">No</th>
+              <th style="width:22%;">Kata Kerja Operasional (KKO Sesuai Elemen CP)</th>
+              <th style="width:18%;">Taksonomi Bloom &amp; SOLO</th>
+              <th>Materi Pokok &amp; Penjabaran Submateri Esensial</th>
+              <th class="no-print" style="width:12%;">Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map((k, i) => {
+              if (k.sedangEdit) {
+                const teksSubEdit = (k.submateriList || []).join('\n');
+                return `
+                  <tr style="background:#f8fafc;">
+                    <td style="text-align:center;">${i + 1}</td>
+                    <td>
+                      <label style="font-size:10.5px; font-weight:bold;">KKO Sesuai CP:</label>
+                      <input type="text" id="editB1Kko_${i}" value="${k.kko.replace(/"/g, '&quot;')}" style="width:100%; padding:4px; border:1px solid #0f4c81; border-radius:4px; font-size:11.5px;">
+                    </td>
+                    <td>
+                      <label style="font-size:10.5px; font-weight:bold;">Bloom:</label>
+                      <input type="text" id="editB1Bloom_${i}" value="${k.bloom.replace(/"/g, '&quot;')}" style="width:100%; padding:3px; border:1px solid #0f4c81; border-radius:4px; font-size:11px; margin-bottom:4px;">
+                      <label style="font-size:10.5px; font-weight:bold;">SOLO:</label>
+                      <input type="text" id="editB1Solo_${i}" value="${k.solo.replace(/"/g, '&quot;')}" style="width:100%; padding:3px; border:1px solid #0f4c81; border-radius:4px; font-size:11px;">
+                    </td>
+                    <td>
+                      <label style="font-size:10.5px; font-weight:bold;">Materi Pokok:</label>
+                      <input type="text" id="editB1Materi_${i}" value="${k.materi.replace(/"/g, '&quot;')}" style="width:100%; padding:4px; border:1px solid #0f4c81; border-radius:4px; font-size:11.5px; margin-bottom:4px;">
+                      <label style="font-size:10.5px; font-weight:bold;">Submateri (1 baris per butir):</label>
+                      <textarea id="editB1Sub_${i}" rows="3" style="width:100%; padding:4px; border:1px solid #0f4c81; border-radius:4px; font-size:11px;">${teksSubEdit}</textarea>
+                    </td>
+                    <td class="no-print" style="text-align:center;">
+                      <button type="button" class="btn btn-primary btn-sm" style="padding:3px 7px; font-size:10.5px; width:100%; margin-bottom:4px;" onclick="simpanEditBarisBagian1(${i})">Simpan</button>
+                      <button type="button" class="btn btn-secondary btn-sm" style="padding:3px 7px; font-size:10.5px; width:100%;" onclick="toggleEditBarisBagian1(${i})">Batal</button>
+                    </td>
+                  </tr>
+                `;
+              }
+
+              return `
+                <tr>
+                  <td style="text-align:center;">${i + 1}</td>
+                  <td><b>${k.kko}</b></td>
+                  <td><b>Bloom:</b> ${k.bloom}<br><b>SOLO:</b> ${k.solo}</td>
+                  <td>
+                    <b>Materi Pokok ${i + 1}: ${k.materi}</b><br>
+                    <div style="font-size:11.5px; color:#334155; margin-top:4px;">${k.detailJabaran}</div>
+                  </td>
+                  <td class="no-print" style="text-align:center;">
+                    <button type="button" class="btn btn-secondary btn-sm" style="padding:2px 7px; font-size:10.5px; border-color:#0f4c81; color:#0f4c81; margin-bottom:3px; width:100%;" onclick="toggleEditBarisBagian1(${i})">Edit</button>
+                    <button type="button" class="btn btn-danger btn-sm" style="padding:2px 7px; font-size:10.5px; width:100%;" onclick="hapusBarisBagian1(${i})">Hapus</button>
+                  </td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function toggleEditBarisBagian1(idx) {
+      if (!hasilCpTerakhir?.daftarKko?.[idx]) return;
+      hasilCpTerakhir.daftarKko[idx].sedangEdit = !hasilCpTerakhir.daftarKko[idx].sedangEdit;
+      renderTabelBagian1DekonstruksiCp();
+    }
+
+    function simpanEditBarisBagian1(idx) {
+      const item = hasilCpTerakhir?.daftarKko?.[idx];
+      if (!item) return;
+      const kkoBaru = document.getElementById(`editB1Kko_${idx}`).value.trim() || item.kko;
+      const bloomBaru = document.getElementById(`editB1Bloom_${idx}`).value.trim() || item.bloom;
+      const soloBaru = document.getElementById(`editB1Solo_${idx}`).value.trim() || item.solo;
+      const materiBaru = document.getElementById(`editB1Materi_${idx}`).value.trim() || item.materi;
+      const subBaruRaw = document.getElementById(`editB1Sub_${idx}`).value.trim();
+
+      const subListBaru = subBaruRaw
+        .split('\n')
+        .map(s => s.replace(/^[•\-\*]\s*/, '').trim())
+        .filter(Boolean);
+
+      item.kko = kkoBaru;
+      item.bloom = bloomBaru;
+      item.solo = soloBaru;
+      item.materi = materiBaru;
+      item.submateriList = subListBaru.length > 0 ? subListBaru : item.submateriList;
+      item.detailJabaran = item.submateriList
+        .map((sub, sIdx) => `• <b>Submateri ${idx + 1}.${sIdx + 1}:</b> ${sub}.`)
+        .join('<br>');
+      item.sedangEdit = false;
+
+      renderTabelBagian1DekonstruksiCp();
+      tampilkanToast(`Baris ${idx + 1} Bagian I berhasil diperbarui!`, 'success');
+    }
+
+    function hapusBarisBagian1(idx) {
+      if (!hasilCpTerakhir?.daftarKko?.[idx]) return;
+      hasilCpTerakhir.daftarKko.splice(idx, 1);
+      // Perbarui penomoran submateri pada baris tersisa
+      hasilCpTerakhir.daftarKko.forEach((k, i) => {
+        k.detailJabaran = (k.submateriList || [])
+          .map((sub, sIdx) => `• <b>Submateri ${i + 1}.${sIdx + 1}:</b> ${sub}.`)
+          .join('<br>');
+      });
+      renderTabelBagian1DekonstruksiCp();
+      tampilkanToast('Baris pada Bagian I (Dekonstruksi CP) telah dihapus.', 'warning');
+    }
+
+    function renderTabelBagian2RumusanTp() {
+      const wadah = document.getElementById('outStagger2');
+      if (!wadah || !hasilCpTerakhir || !hasilCpTerakhir.daftarTp) return;
+
+      const rows = hasilCpTerakhir.daftarTp;
+      if (rows.length === 0) {
+        wadah.innerHTML = '<p style="font-size:12px; color:#64748b; font-style:italic;">Belum ada baris Tujuan Pembelajaran (TP).</p>';
+        return;
+      }
+
+      wadah.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th style="width:10%;">Kode TP</th>
+              <th>Rumusan Tujuan Pembelajaran (Kompetensi KKO Sesuai CP + Jabaran Submateri)</th>
+              <th style="width:17%;">Level Kognitif</th>
+              <th class="no-print" style="width:12%;">Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map((tp, i) => {
+              if (tp.sedangEdit) {
+                return `
+                  <tr style="background:#f8fafc;">
+                    <td style="text-align:center;">
+                      <input type="text" id="editB2Kode_${i}" value="${tp.kode.replace(/"/g, '&quot;')}" style="width:100%; padding:4px; border:1px solid #0f4c81; border-radius:4px; text-align:center; font-weight:bold; font-size:11px;">
+                    </td>
+                    <td>
+                      <textarea id="editB2Rumusan_${i}" rows="3" style="width:100%; padding:4px; border:1px solid #0f4c81; border-radius:4px; font-size:11.5px;">${tp.rumusan}</textarea>
+                    </td>
+                    <td>
+                      <input type="text" id="editB2Level_${i}" value="${(tp.bloom.split(' ')[0] + ' (' + tp.solo + ')').replace(/"/g, '&quot;')}" style="width:100%; padding:4px; border:1px solid #0f4c81; border-radius:4px; text-align:center; font-size:11px;">
+                    </td>
+                    <td class="no-print" style="text-align:center;">
+                      <button type="button" class="btn btn-primary btn-sm" style="padding:3px 7px; font-size:10.5px; width:100%; margin-bottom:4px;" onclick="simpanEditBarisBagian2(${i})">Simpan</button>
+                      <button type="button" class="btn btn-secondary btn-sm" style="padding:3px 7px; font-size:10.5px; width:100%;" onclick="toggleEditBarisBagian2(${i})">Batal</button>
+                    </td>
+                  </tr>
+                `;
+              }
+
+              const labelLevel = tp.levelCustom || `${tp.bloom.split(' ')[0]} (${tp.solo})`;
+              return `
+                <tr>
+                  <td style="text-align:center; font-weight:bold;">${tp.kode}</td>
+                  <td>${tp.rumusan}</td>
+                  <td style="text-align:center;">${labelLevel}</td>
+                  <td class="no-print" style="text-align:center;">
+                    <button type="button" class="btn btn-secondary btn-sm" style="padding:2px 7px; font-size:10.5px; border-color:#0f4c81; color:#0f4c81; margin-bottom:3px; width:100%;" onclick="toggleEditBarisBagian2(${i})">Edit</button>
+                    <button type="button" class="btn btn-danger btn-sm" style="padding:2px 7px; font-size:10.5px; width:100%;" onclick="hapusBarisBagian2(${i})">Hapus</button>
+                  </td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function toggleEditBarisBagian2(idx) {
+      if (!hasilCpTerakhir?.daftarTp?.[idx]) return;
+      hasilCpTerakhir.daftarTp[idx].sedangEdit = !hasilCpTerakhir.daftarTp[idx].sedangEdit;
+      renderTabelBagian2RumusanTp();
+    }
+
+    function simpanEditBarisBagian2(idx) {
+      const tp = hasilCpTerakhir?.daftarTp?.[idx];
+      if (!tp) return;
+      const kodeLama = tp.kode;
+      const kodeBaru = document.getElementById(`editB2Kode_${idx}`).value.trim() || tp.kode;
+      const rumusanBaru = document.getElementById(`editB2Rumusan_${idx}`).value.trim() || tp.rumusan;
+      const levelBaru = document.getElementById(`editB2Level_${idx}`).value.trim();
+
+      tp.kode = kodeBaru;
+      tp.rumusan = rumusanBaru;
+      if (levelBaru) tp.levelCustom = levelBaru;
+      tp.sedangEdit = false;
+
+      // Ikut perbarui rumusan & kode TP di Bagian III (ATP) yang terhubung
+      if (hasilCpTerakhir.atpTerstruktur) {
+        hasilCpTerakhir.atpTerstruktur.forEach(a => {
+          if (a.kodeTp === kodeLama) {
+            a.kodeTp = kodeBaru;
+            a.rumusan = rumusanBaru;
+          }
+        });
+        renderTabelBagian3Atp();
+      }
+
+      renderTabelBagian2RumusanTp();
+      tampilkanToast(`Rumusan ${kodeBaru} berhasil diperbarui & disinkronkan ke ATP!`, 'success');
+    }
+
+    function hapusBarisBagian2(idx) {
+      if (!hasilCpTerakhir?.daftarTp?.[idx]) return;
+      const kodeTerhapus = hasilCpTerakhir.daftarTp[idx].kode;
+      hasilCpTerakhir.daftarTp.splice(idx, 1);
+
+      // Re-index kode TP agar tetap berurutan rapi (TP.01, TP.02, ...)
+      hasilCpTerakhir.daftarTp.forEach((tp, i) => {
+        tp.kode = (i + 1) < 10 ? `TP.0${i + 1}` : `TP.${i + 1}`;
+      });
+
+      // Hapus juga dari ATP jika kode TP tersebut ada di ATP
+      if (hasilCpTerakhir.atpTerstruktur) {
+        hasilCpTerakhir.atpTerstruktur = hasilCpTerakhir.atpTerstruktur.filter(a => a.kodeTp !== kodeTerhapus);
+        hasilCpTerakhir.atpTerstruktur.forEach((a, i) => {
+          a.langkah = i + 1;
+          a.kodeAtp = `ATP-${i + 1}`;
+        });
+        renderTabelBagian3Atp();
+      }
+
+      renderTabelBagian2RumusanTp();
+      perbaruiIndikatorRantaiTerpadu();
+      tampilkanToast(`Tujuan Pembelajaran (${kodeTerhapus}) telah dihapus.`, 'warning');
     }
 
     function perbaruiIndikatorRantaiTerpadu() {
@@ -2307,30 +2584,41 @@
         <table>
           <thead>
             <tr>
-              <th style="width:10%;">Alur</th>
-              <th style="width:14%;">Kode ATP / TP</th>
+              <th style="width:9%;">Alur</th>
+              <th style="width:13%;">Kode ATP / TP</th>
               <th>Alur Tujuan Pembelajaran (ATP)</th>
-              <th style="width:22%;">Lingkup Materi</th>
-              <th style="width:13%;">Alokasi</th>
+              <th style="width:20%;">Lingkup Materi</th>
+              <th style="width:10%;">Alokasi</th>
+              <th class="no-print" style="width:12%;">Aksi</th>
             </tr>
           </thead>
           <tbody>
             ${atpTerstruktur.map((a, idx) => {
-              const selAlokasiAtp = a.sedangEditJp ? `
-                <div class="no-print" style="display:flex; flex-direction:column; gap:4px; align-items:center;">
-                  <div style="display:flex; align-items:center; gap:3px;">
-                    <input type="number" id="inpEditJpAtp_${idx}" value="${a.jp}" min="0" max="400" style="width:52px; padding:3px; border:1px solid #0f4c81; border-radius:4px; text-align:center; font-size:11px;">
-                    <span style="font-size:11px;">JP</span>
-                  </div>
-                  <div style="display:flex; gap:3px;">
-                    <button type="button" class="btn btn-primary btn-sm" style="padding:2px 6px; font-size:10px;" onclick="simpanEditJpAtp(${idx})">Simpan</button>
-                    <button type="button" class="btn btn-secondary btn-sm" style="padding:2px 6px; font-size:10px;" onclick="toggleEditJpAtp(${idx})">Batal</button>
-                  </div>
-                </div>
-              ` : `
-                <div><b>${a.jp} JP</b></div>
-                <button type="button" class="btn btn-secondary btn-sm no-print" style="margin-top:4px; padding:2px 8px; font-size:10.5px; border-color:#0f4c81; color:#0f4c81;" onclick="toggleEditJpAtp(${idx})">Edit</button>
-              `;
+              if (a.sedangEdit) {
+                return `
+                  <tr style="background:#f8fafc;">
+                    <td style="text-align:center; font-weight:bold;">Langkah ${a.langkah}</td>
+                    <td style="text-align:center;">
+                      <b>${a.kodeAtp}</b><br>
+                      <input type="text" id="inpEditKodeTpAtp_${idx}" value="${a.kodeTp.replace(/"/g, '&quot;')}" style="width:74px; padding:2px; border:1px solid #0f4c81; border-radius:4px; text-align:center; font-size:10.5px; margin-top:2px;">
+                    </td>
+                    <td>
+                      <textarea id="inpEditRumusanAtp_${idx}" rows="3" style="width:100%; padding:4px; border:1px solid #0f4c81; border-radius:4px; font-size:11.5px;">${a.rumusan}</textarea>
+                    </td>
+                    <td>
+                      <textarea id="inpEditMateriAtp_${idx}" rows="2" style="width:100%; padding:4px; border:1px solid #0f4c81; border-radius:4px; font-size:11px;">${a.materi}</textarea>
+                    </td>
+                    <td style="text-align:center;">
+                      <input type="number" id="inpEditJpAtp_${idx}" value="${a.jp}" min="0" max="400" style="width:52px; padding:3px; border:1px solid #0f4c81; border-radius:4px; text-align:center; font-size:11px;">
+                      <div style="font-size:10.5px;">JP</div>
+                    </td>
+                    <td class="no-print" style="text-align:center;">
+                      <button type="button" class="btn btn-primary btn-sm" style="padding:3px 7px; font-size:10.5px; width:100%; margin-bottom:4px;" onclick="simpanEditBarisBagian3(${idx})">Simpan</button>
+                      <button type="button" class="btn btn-secondary btn-sm" style="padding:3px 7px; font-size:10.5px; width:100%;" onclick="toggleEditBarisBagian3(${idx})">Batal</button>
+                    </td>
+                  </tr>
+                `;
+              }
 
               return `
                 <tr>
@@ -2338,43 +2626,81 @@
                   <td style="text-align:center;"><b>${a.kodeAtp}</b><br><span style="font-size:11px; color:#475569;">(${a.kodeTp})</span></td>
                   <td>${a.rumusan}</td>
                   <td>${a.materi}</td>
-                  <td style="text-align:center;">${selAlokasiAtp}</td>
+                  <td style="text-align:center;"><b>${a.jp} JP</b></td>
+                  <td class="no-print" style="text-align:center;">
+                    <button type="button" class="btn btn-secondary btn-sm" style="padding:2px 7px; font-size:10.5px; border-color:#0f4c81; color:#0f4c81; margin-bottom:3px; width:100%;" onclick="toggleEditBarisBagian3(${idx})">Edit</button>
+                    <button type="button" class="btn btn-danger btn-sm" style="padding:2px 7px; font-size:10.5px; width:100%;" onclick="hapusBarisBagian3(${idx})">Hapus</button>
+                  </td>
                 </tr>
               `;
             }).join('')}
             <tr style="background:${sesuaiPagu ? '#e2e8f0' : '#fee2e2'}; font-weight:bold;">
               <td colspan="4" style="text-align:right;">TOTAL ALOKASI JAM PELAJARAN (TUNTAS FASE)${adaPaguAme ? ` — Pagu PROTA &amp; AME: ${paguTarget} JP` : ''}:</td>
               <td style="text-align:center; color:${sesuaiPagu ? '#0f172a' : '#dc2626'};">${totalJpAtp} JP</td>
+              <td class="no-print"></td>
             </tr>
           </tbody>
         </table>
       `;
     }
 
-    function toggleEditJpAtp(idx) {
+    function toggleEditBarisBagian3(idx) {
       if (!hasilCpTerakhir || !hasilCpTerakhir.atpTerstruktur[idx]) return;
-      hasilCpTerakhir.atpTerstruktur[idx].sedangEditJp = !hasilCpTerakhir.atpTerakhir?.[idx]?.sedangEditJp;
-      hasilCpTerakhir.atpTerstruktur[idx].sedangEditJp = true;
+      hasilCpTerakhir.atpTerstruktur[idx].sedangEdit = !hasilCpTerakhir.atpTerstruktur[idx].sedangEdit;
       renderTabelBagian3Atp();
     }
 
-    function simpanEditJpAtp(idx) {
+    function simpanEditBarisBagian3(idx) {
       if (!hasilCpTerakhir || !hasilCpTerakhir.atpTerstruktur[idx]) return;
-      const inp = document.getElementById(`inpEditJpAtp_${idx}`);
-      if (!inp) return;
-      const jpBaru = Math.max(0, parseInt(inp.value, 10) || 0);
-      hasilCpTerakhir.atpTerstruktur[idx].jp = jpBaru;
-      hasilCpTerakhir.atpTerstruktur[idx].sedangEditJp = false;
+      const itemAtp = hasilCpTerakhir.atpTerstruktur[idx];
+      const kodeTpBaru = document.getElementById(`inpEditKodeTpAtp_${idx}`)?.value.trim() || itemAtp.kodeTp;
+      const rumusanBaru = document.getElementById(`inpEditRumusanAtp_${idx}`)?.value.trim() || itemAtp.rumusan;
+      const materiBaru = document.getElementById(`inpEditMateriAtp_${idx}`)?.value.trim() || itemAtp.materi;
+      const jpBaru = Math.max(0, parseInt(document.getElementById(`inpEditJpAtp_${idx}`)?.value, 10) || 0);
+
+      itemAtp.kodeTp = kodeTpBaru;
+      itemAtp.rumusan = rumusanBaru;
+      itemAtp.materi = materiBaru;
+      itemAtp.jp = jpBaru;
+      itemAtp.sedangEdit = false;
 
       // Sinkronkan dua arah ke PROTA & PROSEM jika sudah pernah di-generate
       if (stateAmeProtaProsem && stateAmeProtaProsem.items && stateAmeProtaProsem.items[idx]) {
+        stateAmeProtaProsem.items[idx].kodeTp = kodeTpBaru;
+        stateAmeProtaProsem.items[idx].rumusan = rumusanBaru;
+        stateAmeProtaProsem.items[idx].materi = materiBaru;
         stateAmeProtaProsem.items[idx].jp = jpBaru;
         stateAmeProtaProsem.items[idx].minggu = Math.max(1, Math.round(jpBaru / Math.max(1, stateAmeProtaProsem.jjmp)));
         renderDokumenProtaDanProsem();
       }
 
       renderTabelBagian3Atp();
-      tampilkanToast(`Alokasi waktu ${hasilCpTerakhir.atpTerstruktur[idx].kodeAtp} diperbarui menjadi ${jpBaru} JP & disinkronkan ke PROTA!`, 'success');
+      tampilkanToast(`Baris ${itemAtp.kodeAtp} berhasil diperbarui & disinkronkan ke PROTA/PROSEM!`, 'success');
+    }
+
+    function hapusBarisBagian3(idx) {
+      if (!hasilCpTerakhir || !hasilCpTerakhir.atpTerstruktur[idx]) return;
+      const kodeAtpTerhapus = hasilCpTerakhir.atpTerstruktur[idx].kodeAtp;
+      hasilCpTerakhir.atpTerstruktur.splice(idx, 1);
+
+      // Re-index langkah & kode ATP
+      hasilCpTerakhir.atpTerstruktur.forEach((a, i) => {
+        a.langkah = i + 1;
+        a.kodeAtp = `ATP-${i + 1}`;
+      });
+
+      // Sinkronkan penghapusan unit ke PROTA & PROSEM jika sudah aktif
+      if (stateAmeProtaProsem && stateAmeProtaProsem.items && stateAmeProtaProsem.items[idx]) {
+        stateAmeProtaProsem.items.splice(idx, 1);
+        stateAmeProtaProsem.items.forEach((it, i) => {
+          it.kodeAtp = `ATP-${i + 1}`;
+        });
+        renderDokumenProtaDanProsem();
+      }
+
+      renderTabelBagian3Atp();
+      perbaruiIndikatorRantaiTerpadu();
+      tampilkanToast(`Baris ${kodeAtpTerhapus} pada Alur Tujuan Pembelajaran (ATP) telah dihapus.`, 'warning');
     }
 
     // =========================================================================
