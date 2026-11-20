@@ -998,6 +998,10 @@
           <!-- PARAMETER BEBAN BELAJAR & PAGU MINGGU -->
           <div class="grid-3">
             <div class="form-group">
+              <label class="form-label">Mata Pelajaran (Otomatis dari Profil Guru / Dapat Diedit) *</label>
+              <input type="text" id="kalMapel" class="form-input" placeholder="Otomatis dari Profil Guru..." oninput="resetStatusAnalisisStruktur()">
+            </div>
+            <div class="form-group">
               <label class="form-label">Pagu Asumsi Minggu / Tahun (Permendikdasmen No. 13 Th. 2025)</label>
               <select id="kalPaguMinggu" class="form-select" onchange="sinkronKelasDariPaguAme(); hitungOtomatisJjmpDariStruktur();">
                 <option value="36_X">Kelas X (SMA/SMK/SMALB) — Asumsi 36 Minggu/Tahun</option>
@@ -1123,17 +1127,34 @@
       <div class="card no-print">
         <div class="card-header">
           <h2>Generator-RPPM-AI (Pendekatan Pembelajaran Mendalam &amp; Permendikdasmen No. 1 Th. 2026)</h2>
-          <button type="button" class="btn btn-secondary btn-sm" onclick="sinkronkanAtpKeRppm(true)">Sinkron Ulang TP dari Hasil ATP</button>
+          <button type="button" class="btn btn-accent btn-sm" onclick="sinkronkanAtpKeRppm(true)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            Sinkronisasi Hasil ATP ke RPPM
+          </button>
         </div>
         <div class="card-body">
+          <!-- PANEL SINKRONISASI CEPAT DARI HASIL ATP -->
+          <div style="background: var(--accent-light); border: 1px solid #99f6e4; border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div style="flex: 1; min-width: 240px;">
+              <div style="font-size: 12.5px; font-weight: 700; color: var(--accent-dark);">Sinkronisasi Otomatis dari Generator CP &amp; ATP:</div>
+              <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 6px;">
+                <select id="rppmPilihUnitAtp" class="form-select" style="max-width: 380px; padding: 6px 10px; font-size: 12.5px;" onchange="terapkanPilihanAtpKeRppm()">
+                  <option value="ALL">Semua Urutan ATP (Tampilkan Seluruh ATP)</option>
+                </select>
+                <button type="button" class="btn btn-accent btn-sm" onclick="sinkronkanAtpKeRppm(true)">Sinkronisasi Sekarang</button>
+              </div>
+            </div>
+            <span id="badgeStatusSinkronRppm" class="badge badge-teal">Siap Sinkron</span>
+          </div>
+
           <div class="grid-3">
             <div class="form-group">
               <label class="form-label">1. Nama Guru</label>
               <input type="text" id="rppmNamaGuru" class="form-input">
             </div>
             <div class="form-group">
-              <label class="form-label">2. NIP (Opsional)</label>
-              <input type="text" id="rppmNipGuru" class="form-input">
+              <label class="form-label">2. NIP / NUPTK (Opsional)</label>
+              <input type="text" id="rppmNipGuru" class="form-input" placeholder="Opsional">
             </div>
             <div class="form-group">
               <label class="form-label">3. Mata Pelajaran</label>
@@ -1289,11 +1310,37 @@
       <div class="card no-print">
         <div class="card-header">
           <h2>Generator-LKM-AI (Lembar Kerja Murid — Pendekatan Pembelajaran Mendalam)</h2>
-          <button type="button" class="btn btn-secondary btn-sm" onclick="sinkronkanRppmKeLkm(true)">Sinkron Ulang Data dari Hasil RPPM-AI</button>
+          <button type="button" class="btn btn-accent btn-sm" onclick="sinkronkanRppmKeLkm(true)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            Sinkronisasi Hasil ATP &amp; RPPM ke LKM
+          </button>
         </div>
         <div class="card-body">
-          <div style="background: var(--primary-light); border-left: 4px solid var(--primary); padding: 10px 14px; border-radius: 6px; margin-bottom: 16px; font-size: 12.5px; color: var(--primary-dark);">
-            <b>Sumber Rujukan Otomatis:</b> Identitas, Topik, Tujuan Pembelajaran (TP), dan Dimensi Profil Lulusan (DPL) ditarik otomatis dari hasil <b>Generator-RPPM-AI</b>. Anda tetap dapat menyesuaikan atau mengisinya secara manual.
+          <div style="background: var(--primary-light); border-left: 4px solid var(--primary); padding: 11px 14px; border-radius: 6px; margin-bottom: 16px; font-size: 12.5px; color: var(--primary-dark); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div>
+              <b>Sumber Rujukan Otomatis:</b> Klik tombol <b>Sinkronisasi</b> untuk menarik Identitas, Topik, <b>Tujuan Pembelajaran (dari hasil urutan ATP / RPPM-AI)</b>, dan Dimensi Profil Lulusan (DPL) secara otomatis.
+            </div>
+            <button type="button" class="btn btn-primary btn-sm" onclick="sinkronkanRppmKeLkm(true)">Sinkronisasi Sekarang</button>
+          </div>
+
+          <div class="grid-3">
+            <div class="form-group">
+              <label class="form-label">1. Satuan Pendidikan</label>
+              <input type="text" id="lkmSekolah" class="form-input" placeholder="Contoh: SMKN 1 Tanjung Tiram / SMAN 1">
+            </div>
+            <div class="form-group">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; flex-wrap: wrap; gap: 6px;">
+              <label class="form-label" style="margin: 0;">Tujuan Pembelajaran (Otomatis Diambil dari Hasil Urutan ATP)</label>
+              <button type="button" class="btn btn-secondary btn-sm" style="border-color: var(--accent); color: var(--accent-dark);" onclick="sinkronkanAtpKeRppm(true)">Sinkronisasi ATP</button>
+            </div>
+            <textarea id="rppmTujuanPembelajaran" class="form-textarea" style="min-height: 95px;" placeholder="Klik tombol Sinkronisasi untuk menampilkan Tujuan Pembelajaran dari hasil urutan ATP..."></textarea>
+          </div>
+            <textarea id="lkmTujuanPembelajaran" class="form-textarea" style="min-height: 90px;" placeholder="Klik tombol Sinkronisasi untuk menampilkan Tujuan Pembelajaran dari hasil urutan ATP..."></textarea>
+          </div>
+            <div class="form-group">
+              <label class="form-label">NIP / NUPTK Guru (Opsional)</label>
+              <input type="text" id="lkmNipGuru" class="form-input">
+            </div>
           </div>
 
           <div class="grid-3">
@@ -1313,24 +1360,12 @@
 
           <div class="grid-3">
             <div class="form-group">
-              <label class="form-label">3. Konsentrasi Keahlian / Peminatan</label>
-              <input type="text" id="lkmKonsentrasi" class="form-input" placeholder="Contoh: Teknik Komputer &amp; Jaringan / Umum">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; flex-wrap: wrap; gap: 6px;">
+              <label class="form-label" style="margin: 0;">Tujuan Pembelajaran (TP) — Otomatis Diambil dari Hasil Urutan ATP / RPPM-AI</label>
+              <button type="button" class="btn btn-secondary btn-sm" style="border-color: var(--primary); color: var(--primary);" onclick="sinkronkanRppmKeLkm(true)">Sinkronisasi ATP / RPPM</button>
             </div>
-            <div class="form-group">
-              <label class="form-label">4. Mata Pelajaran / Elemen</label>
-              <input type="text" id="lkmMapel" class="form-input">
-            </div>
-            <div class="form-group">
-              <label class="form-label">5. Kelas / Fase / Semester</label>
-              <input type="text" id="lkmKelasFase" class="form-input" value="XI / Fase F / Ganjil">
-            </div>
+            <textarea id="lkmTujuanPembelajaran" class="form-textarea" style="min-height: 90px;" placeholder="Klik tombol Sinkronisasi untuk menampilkan Tujuan Pembelajaran dari hasil urutan ATP..."></textarea>
           </div>
-
-          <div class="grid-3">
-            <div class="form-group">
-              <label class="form-label">6. Tahun Pelajaran</label>
-              <input type="text" id="lkmTahunPelajaran" class="form-input" value="2026/2027">
-            </div>
             <div class="form-group">
               <label class="form-label">7. Alokasi Waktu (JP)</label>
               <input type="text" id="lkmAlokasiJp" class="form-input" value="2 x 45 Menit">
@@ -1534,16 +1569,26 @@
       const kepsekNip = profil.nipKepsek || '';
       const kotaTgl = profil.kotaTanggal || '';
 
+      const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+      const setText = (id, txt) => { const el = document.getElementById(id); if (el) el.innerText = txt; };
+
       // 1. Ke Generator CP & ATP
-      document.getElementById('genInputMapel').value = profil.mapel || '';
-      document.getElementById('lblDocKepsekNama').innerText = kepsekNama || '_________________________';
-      document.getElementById('lblDocKepsekNip').innerText = kepsekNip || '.....................................';
-      document.getElementById('lblDocLokasi').innerText = kotaTgl || '......................., .............................. 2026';
+      setVal('genInputMapel', profil.mapel || '');
+      setVal('kalMapel', profil.mapel || '');
+      setText('lblDocKepsekNama', kepsekNama || '_________________________');
+      setText('lblDocKepsekNip', kepsekNip || '.....................................');
+      setText('lblDocLokasi', kotaTgl || '......................., .............................. 2026');
 
       // 2. Ke Generator-RPPM-AI
-      document.getElementById('rppmNamaGuru').value = profil.nama || '';
-      document.getElementById('rppmNipGuru').value = profil.nip === '-' ? '' : (profil.nip || '');
-      document.getElementById('rppmMapel').value = profil.mapel || '';
+      setVal('rppmNamaGuru', profil.nama || '');
+      setVal('rppmNipGuru', profil.nip === '-' ? '' : (profil.nip || ''));
+      setVal('rppmMapel', profil.mapel || '');
+
+      // 3. Ke Generator-LKM-AI
+      setVal('lkmSekolah', profil.sekolah || '');
+      setVal('lkmNamaGuru', profil.nama || '');
+      setVal('lkmNipGuru', profil.nip === '-' ? '' : (profil.nip || ''));
+      setVal('lkmMapel', profil.mapel || '');
     }
 
     // =========================================================================
@@ -1596,18 +1641,18 @@
       const daftarGuru = dapatkanAkunTersimpan();
       const akunCocok = daftarGuru.find(g => g.email.toLowerCase() === email);
 
-      if (akunCocok) {
-        if (akunCocok.pass && akunCocok.pass !== pass) {
-          tampilkanToast('Kata sandi tidak sesuai dengan akun terdaftar!', 'danger');
-          return;
-        }
-        aktifkanSesiGuru(akunCocok);
-        tampilkanToast(`Berhasil masuk sebagai ${akunCocok.nama}`, 'success');
-      } else {
-        tampilkanToast('Surel belum terdaftar di perangkat ini. Silakan daftar akun terlebih dahulu.', 'warning');
-        gantiTabAuth('daftar');
-        document.getElementById('regEmail').value = email;
+      if (!akunCocok) {
+        tampilkanToast('Akun belum terdaftar. Silakan klik tab "Daftar Akun Guru Baru" terlebih dahulu.', 'warning');
+        return;
       }
+
+      if (akunCocok.pass !== pass) {
+        tampilkanToast('Kata sandi tidak sesuai. Silakan periksa kembali.', 'danger');
+        return;
+      }
+
+      aktifkanSesiGuru(akunCocok);
+      tampilkanToast(`Selamat datang kembali, ${akunCocok.nama}!`, 'success');
     }
 
     function aktifkanSesiGuru(profil) {
@@ -2798,8 +2843,16 @@
       }
 
       // 2. JENJANG SMK — PERMENDIKDASMEN NO. 13 TAHUN 2025
-      if (j === 'SMK') {
-        // Kelompok Mata Pelajaran Kejuruan SMK:
+      const isMapelKhasSmk = (
+        m.includes('konsentrasi keahlian') || m.includes('dasar-dasar') || m.includes('dasar program') ||
+        m.includes('dasar kejuruan') || m.includes('projek kreatif') || m.includes('kreativitas, inovasi') ||
+        m.includes('kreatifitas, inovatif') || m.includes('kreativitas') || m.includes('kreatifitas') ||
+        m.includes('inovatif') || m.includes('pkk') || m.includes('kewirausahaan') ||
+        m.includes('praktik kerja lapangan') || m.includes('pkl') || m.includes('projek ipas') || m.includes('ipas')
+      );
+
+      if (j === 'SMK' || isMapelKhasSmk) {
+        // Kelompok Mata Pelajaran Kejuruan SMK (Permendikdasmen No. 13 Tahun 2025):
         if (m.includes('konsentrasi keahlian') || m.includes('produktif') || m.includes('kejuruan') || m.includes('dkv') || m.includes('tkj') || m.includes('rpl') || m.includes('tjkt') || m.includes('pplg') || m.includes('tkr') || m.includes('tsm') || m.includes('akuntansi') || m.includes('mplb') || m.includes('pemasaran') || m.includes('kuliner') || m.includes('tata boga') || m.includes('busana') || m.includes('perhotelan') || m.includes('agribisnis') || m.includes('nautika') || m.includes('farmasi') || m.includes('keperawatan')) {
           if (isX) return 12 * 36;      // Dasar-dasar Program Keahlian Kelas X = 432 JP (12 JP/mgg)
           if (isXI) return 18 * 36;     // Konsentrasi Keahlian Kelas XI = 648 JP (18 JP/mgg)
@@ -2808,17 +2861,20 @@
         if (m.includes('dasar-dasar') || m.includes('dasar program') || m.includes('dasar kejuruan')) {
           return 12 * 36;               // Kelas X SMK = 432 JP (12 JP/mgg)
         }
-        if (m.includes('projek kreatif') || m.includes('kreativitas, inovasi') || m.includes('pkk') || m.includes('kewirausahaan')) {
-          // PKK / Kreativitas, Inovasi, dan Kewirausahaan SMK: Kelas XI = 180 JP (5 JP/mgg), Kelas XII = 160 JP (5 JP/mgg x 32 mgg) atau 80 JP (5 JP/mgg x 16 mgg)
+        if (m.includes('projek kreatif') || m.includes('kreativitas, inovasi') || m.includes('kreatifitas, inovatif') || m.includes('kreativitas') || m.includes('kreatifitas') || m.includes('inovatif') || m.includes('pkk') || m.includes('kewirausahaan')) {
+          // Kreativitas, Inovasi, dan Kewirausahaan SMK (Permendikdasmen No. 13 Tahun 2025):
+          // Kelas XI = 180 JP (5 JP/mgg x 36 minggu)
+          // Kelas XII = 80 JP (5 JP/mgg x 16 minggu efektif di sekolah)
           if (isX) return 0;
           if (isXI) return 5 * 36;      // 180 JP
-          return isPklGenap ? 80 : 160; // 160 JP (32 mgg) / 80 JP (16 mgg sebelum PKL)
+          return 5 * 16;                // 80 JP (Kelas XII SMK)
         }
         if (m.includes('mata pelajaran pilihan') || m.includes('mapel pilihan')) {
-          // Mapel Pilihan SMK: Kelas XI = 144 JP (4 JP/mgg), Kelas XII = 128 JP (4 JP/mgg x 32 mgg) atau 64 JP (4 JP/mgg x 16 mgg)
+          // Mapel Pilihan SMK (Permendikdasmen No. 13 Tahun 2025):
+          // Kelas XI = 144 JP (4 JP/mgg x 36 minggu), Kelas XII = 64 JP (4 JP/mgg x 16 minggu)
           if (isX) return 0;
           if (isXI) return 4 * 36;      // 144 JP
-          return isPklGenap ? 64 : 128; // 128 JP (32 mgg) / 64 JP (16 mgg)
+          return 4 * 16;                // 64 JP (Kelas XII SMK)
         }
         if (m.includes('praktik kerja lapangan') || m.includes('pkl')) {
           return isXII ? 736 : 0;       // PKL Kelas XII SMK = 736 JP (46 JP/mgg x 16 minggu)
@@ -2829,7 +2885,7 @@
         if (m.includes('informatika') || m.includes('koding') || m.includes('kecerdasan artifisial')) {
           return isX ? 4 * 36 : (isXI ? 4 * 36 : 4 * 32); // Informatika X SMK = 144 JP (4 JP/mgg)
         }
-        // Kelompok Mata Pelajaran Umum SMK:
+        // Kelompok Mata Pelajaran Umum & Kejuruan Dasar SMK (Permendikdasmen No. 13 Tahun 2025):
         if (m.includes('pendidikan agama') || m.includes('pai') || m.includes('pak') || m.includes('agama')) {
           return 3 * pembagi;           // Kelas X = 108 JP, Kelas XI = 108 JP, Kelas XII = 96 JP (3 JP/mgg)
         }
@@ -2840,10 +2896,14 @@
           return (isX ? 4 : 3) * pembagi; // Kelas X = 144 JP (4 JP/mgg), Kelas XI = 108 JP (3 JP/mgg), Kelas XII = 96 JP (3 JP/mgg)
         }
         if (m.includes('matematika')) {
-          return (isX ? 4 : 3) * pembagi; // Kelas X = 144 JP (4 JP/mgg), Kelas XI = 108 JP (3 JP/mgg), Kelas XII = 96 JP (3 JP/mgg)
+          if (isX) return 4 * 36;       // Kelas X SMK = 144 JP (4 JP/mgg)
+          if (isXI) return 3 * 36;      // Kelas XI SMK = 108 JP (3 JP/mgg)
+          return 3 * 16;                // Kelas XII SMK = 48 JP (3 JP/mgg x 16 minggu)
         }
         if (m.includes('bahasa inggris') || m.includes('b. inggris') || m.includes('english')) {
-          return (isX ? 4 : 3) * pembagi; // Kelas X = 144 JP (4 JP/mgg), Kelas XI = 108 JP (3 JP/mgg), Kelas XII = 96 JP (3 JP/mgg)
+          if (isX) return 4 * 36;       // Kelas X SMK = 144 JP (4 JP/mgg)
+          if (isXI) return 3 * 36;      // Kelas XI SMK = 108 JP (3 JP/mgg)
+          return 4 * 16;                // Kelas XII SMK = 64 JP (4 JP/mgg x 16 minggu)
         }
         if (m.includes('pjok') || m.includes('penjas') || m.includes('olahraga')) {
           return (isX ? 3 : 2) * pembagi; // Kelas X = 108 JP (3 JP/mgg), Kelas XI = 72 JP (2 JP/mgg), Kelas XII = 64 JP (2 JP/mgg)
@@ -2905,9 +2965,9 @@
             const idxMapel = gabunganTeks.toLowerCase().indexOf(mapelLower);
             if (idxMapel !== -1) {
               const potonganSekitar = gabunganTeks.slice(idxMapel, idxMapel + 240);
-              const kandidatAngka = (potonganSekitar.match(/\b(32|36|48|64|72|96|108|128|144|160|180|216|288|320|352|360|432|576|640|648|704)\b/g) || [])
+              const kandidatAngka = (potonganSekitar.match(/\b(32|36|48|64|72|80|96|108|128|144|160|180|216|288|320|352|360|432|576|640|648|704)\b/g) || [])
                 .map(n => parseInt(n, 10))
-                .filter(n => n % pembagiAsumsi === 0 || (mapelLower.includes('konsentrasi keahlian') && n === 352));
+                .filter(n => n % pembagiAsumsi === 0 || (mapelLower.includes('konsentrasi keahlian') && n === 352) || ((mapelLower.includes('kewirausahaan') || mapelLower.includes('kreativ') || mapelLower.includes('kreatif') || mapelLower.includes('pkk')) && n === 80));
               if (kandidatAngka.length > 0) {
                 return kandidatAngka[0];
               }
@@ -2933,11 +2993,26 @@
       btnAnalisis.disabled = true;
       btnAnalisis.innerText = 'Sedang Memindai Struktur Kurikulum Kelas X/XI/XII...';
 
-      const mapelAktif = hasilCpTerakhir?.mapel || penggunaAktif?.mapel || 'Mata Pelajaran';
-      const jenjangAktif = penggunaAktif?.jenjang || 'SMA';
+      const mapelInputAme = (document.getElementById('kalMapel')?.value || '').trim();
+      const mapelAktif = mapelInputAme || penggunaAktif?.mapel || hasilCpTerakhir?.mapel || 'Mata Pelajaran';
+      if (document.getElementById('kalMapel') && !mapelInputAme) {
+        document.getElementById('kalMapel').value = mapelAktif;
+      }
+      const mapelLower = mapelAktif.toLowerCase();
+      const isMapelKhasSmk = (
+        mapelLower.includes('konsentrasi keahlian') || mapelLower.includes('dasar-dasar') ||
+        mapelLower.includes('kreativitas') || mapelLower.includes('kreatifitas') ||
+        mapelLower.includes('inovasi') || mapelLower.includes('inovatif') ||
+        mapelLower.includes('kewirausahaan') || mapelLower.includes('pkk') ||
+        mapelLower.includes('praktik kerja lapangan') || mapelLower.includes('pkl') || mapelLower.includes('ipas')
+      );
+      const jenjangAktif = isMapelKhasSmk ? 'SMK' : (penggunaAktif?.jenjang || 'SMA');
       const paguKode = document.getElementById('kalPaguMinggu').value;
       const kelasFaseInput = document.getElementById('kalKelasFase').value.trim();
-      const pembagiAsumsi = (paguKode === '36_X' || paguKode === '36_XI') ? 36 : 32;
+      const isMapel16MggXII = (paguKode === '32_XII_REG' || paguKode === '16_XII_PKL') &&
+        (jenjangAktif.toUpperCase() === 'SMK') &&
+        (mapelLower.includes('konsentrasi keahlian') || mapelLower.includes('kewirausahaan') || mapelLower.includes('kreativitas') || mapelLower.includes('kreatifitas') || mapelLower.includes('inovasi') || mapelLower.includes('inovatif') || mapelLower.includes('pkk') || mapelLower.includes('pilihan') || mapelLower.includes('matematika') || mapelLower.includes('bahasa inggris'));
+      const pembagiAsumsi = isMapel16MggXII ? 16 : ((paguKode === '36_X' || paguKode === '36_XI') ? 36 : 32);
       const labelTingkatKelas = paguKode === '36_X' ? 'Kelas X' : (paguKode === '36_XI' ? 'Kelas XI' : 'Kelas XII');
 
       // 1. Cek angka eksplisit pada nama file tangkapan layar
@@ -2994,10 +3069,11 @@
       const totalJpTahun = parseInt(inpTotal?.value, 10);
       if (!totalJpTahun || isNaN(totalJpTahun)) return;
 
-      const mapelAktif = hasilCpTerakhir?.mapel || penggunaAktif?.mapel || 'Mata Pelajaran';
-      const isKonsentrasiXII = (paguKode === '32_XII_REG' || paguKode === '16_XII_PKL') &&
-        (mapelAktif.toLowerCase().includes('konsentrasi keahlian') || totalJpTahun === 352);
-      const pembagiAsumsi = isKonsentrasiXII ? 16 : ((paguKode === '36_X' || paguKode === '36_XI') ? 36 : 32);
+      const mapelAktif = (document.getElementById('kalMapel')?.value || '').trim() || penggunaAktif?.mapel || hasilCpTerakhir?.mapel || 'Mata Pelajaran';
+      const mapelLower = mapelAktif.toLowerCase();
+      const isKonsentrasiOrPkkXII = (paguKode === '32_XII_REG' || paguKode === '16_XII_PKL') &&
+        (mapelLower.includes('konsentrasi keahlian') || mapelLower.includes('kewirausahaan') || mapelLower.includes('kreativitas') || mapelLower.includes('kreatifitas') || mapelLower.includes('inovatif') || mapelLower.includes('pkk') || mapelLower.includes('pilihan') || totalJpTahun === 352 || totalJpTahun === 80);
+      const pembagiAsumsi = isKonsentrasiOrPkkXII ? 16 : ((paguKode === '36_X' || paguKode === '36_XI') ? 36 : 32);
       const labelTingkatKelas = paguKode === '36_X' ? 'Kelas X' : (paguKode === '36_XI' ? 'Kelas XI' : 'Kelas XII');
       const jjmpHasil = Math.max(1, Math.round(totalJpTahun / pembagiAsumsi));
       document.getElementById('kalJjmp').value = jjmpHasil;
@@ -3027,20 +3103,21 @@
         tampilkanToast('Total JP/Tahun dari Struktur Kurikulum belum terbaca. Silakan jalankan analisis terlebih dahulu!', 'warning');
         return;
       }
-      const mapelCek = hasilCpTerakhir.mapel || penggunaAktif?.mapel || '';
-      const isKonsentrasiXII = (paguKode === '32_XII_REG' || paguKode === '16_XII_PKL') &&
-        (mapelCek.toLowerCase().includes('konsentrasi keahlian') || totalJpTahun === 352);
-      const pembagiAsumsi = isKonsentrasiXII ? 16 : ((paguKode === '36_X' || paguKode === '36_XI') ? 36 : 32);
+      const mapelCek = ((document.getElementById('kalMapel')?.value || '').trim() || penggunaAktif?.mapel || hasilCpTerakhir.mapel || '').toLowerCase();
+      const isKonsentrasiOrPkkXII = (paguKode === '32_XII_REG' || paguKode === '16_XII_PKL') &&
+        (mapelCek.includes('konsentrasi keahlian') || mapelCek.includes('kewirausahaan') || mapelCek.includes('kreativitas') || mapelCek.includes('kreatifitas') || mapelCek.includes('inovatif') || mapelCek.includes('pkk') || mapelCek.includes('pilihan') || totalJpTahun === 352 || totalJpTahun === 80);
+      const pembagiAsumsi = isKonsentrasiOrPkkXII ? 16 : ((paguKode === '36_X' || paguKode === '36_XI') ? 36 : 32);
       const jjmp = parseInt(document.getElementById('kalJjmp').value, 10) || Math.max(1, Math.round(totalJpTahun / pembagiAsumsi));
       const hariSekolah = parseInt(document.getElementById('kalHariSekolah').value, 10) || 6;
       const tahunAjaran = document.getElementById('kalTahunAjaran').value.trim() || '2026/2027';
       const kelasFase = document.getElementById('kalKelasFase').value.trim() || 'X / Fase E';
-      const progKeahlian = penggunaAktif?.jenjang === 'SMK' ? (hasilCpTerakhir.mapel || penggunaAktif?.mapel || 'Kejuruan') : 'Umum';
+      const mapelDipakai = (document.getElementById('kalMapel')?.value || '').trim() || penggunaAktif?.mapel || hasilCpTerakhir.mapel || 'Mata Pelajaran';
+      const progKeahlian = penggunaAktif?.jenjang === 'SMK' ? mapelDipakai : 'Umum';
 
       const namaSekolah = penggunaAktif?.sekolah || 'Satuan Pendidikan';
       const namaGuru = penggunaAktif?.nama || 'Nama Guru';
       const nipGuru = penggunaAktif?.nip || '-';
-      const mapel = hasilCpTerakhir.mapel || penggunaAktif?.mapel || 'Mata Pelajaran';
+      const mapel = mapelDipakai;
       const namaKepsek = penggunaAktif?.namaKepsek || '_________________________';
       const nipKepsek = penggunaAktif?.nipKepsek || '.....................................';
       const kotaTanggal = penggunaAktif?.kotaTanggal || '......................., .............................. 2026';
@@ -3813,28 +3890,89 @@
       const faseGen = document.getElementById('genInputFase')?.value;
       if (faseGen) document.getElementById('rppmKelasFase').value = faseGen;
 
+      isiDropdownPilihanAtpRppm();
       sinkronkanAtpKeRppm(false);
       perbaruiSaranKemitraanRppm();
     }
 
+    function isiDropdownPilihanAtpRppm() {
+      const sel = document.getElementById('rppmPilihUnitAtp');
+      if (!sel) return;
+      const nilaiSebelumnya = sel.value || 'ALL';
+      sel.innerHTML = '<option value="ALL">Semua Urutan ATP (Tampilkan Seluruh Hasil ATP)</option>';
+      if (hasilCpTerakhir && Array.isArray(hasilCpTerakhir.atpTerstruktur)) {
+        hasilCpTerakhir.atpTerstruktur.forEach((a, idx) => {
+          const opt = document.createElement('option');
+          opt.value = String(idx);
+          const ringkasMateri = (a.materiInduk || a.materi || '').slice(0, 55);
+          opt.textContent = `${a.kodeAtp} (${a.kodeTp}) — ${ringkasMateri}`;
+          sel.appendChild(opt);
+        });
+      }
+      if ([...sel.options].some(o => o.value === nilaiSebelumnya)) {
+        sel.value = nilaiSebelumnya;
+      }
+    }
+
+    function terapkanPilihanAtpKeRppm() {
+      if (!hasilCpTerakhir || !Array.isArray(hasilCpTerakhir.atpTerstruktur) || hasilCpTerakhir.atpTerstruktur.length === 0) {
+        return;
+      }
+      const sel = document.getElementById('rppmPilihUnitAtp');
+      const pilihan = sel ? sel.value : 'ALL';
+      const daftarAtp = hasilCpTerakhir.atpTerstruktur;
+
+      if (pilihan === 'ALL') {
+        const teksSemuaAtp = daftarAtp
+          .map(a => `[${a.kodeAtp} / ${a.kodeTp}] ${a.rumusan}`)
+          .join('\n');
+        document.getElementById('rppmTujuanPembelajaran').value = teksSemuaAtp;
+        if (hasilCpTerakhir.topikList?.[0]) {
+          document.getElementById('rppmTopik').value = hasilCpTerakhir.topikList[0];
+        }
+      } else {
+        const idx = parseInt(pilihan, 10);
+        const item = daftarAtp[idx];
+        if (item) {
+          document.getElementById('rppmTujuanPembelajaran').value = `[${item.kodeAtp} / ${item.kodeTp}] ${item.rumusan}`;
+          document.getElementById('rppmTopik').value = item.materiInduk || item.materi || '';
+          if (item.jp) {
+            document.getElementById('rppmAlokasiJp').value = `${item.jp} JP`;
+          }
+        }
+      }
+      perbaruiSaranKemitraanRppm();
+    }
+
     function sinkronkanAtpKeRppm(tampilkanNotif = false) {
-      if (!hasilCpTerakhir || !hasilCpTerakhir.atpTerstruktur) {
+      if (!hasilCpTerakhir || !Array.isArray(hasilCpTerakhir.atpTerstruktur) || hasilCpTerakhir.atpTerstruktur.length === 0) {
         if (tampilkanNotif) {
           tampilkanToast('Belum ada hasil ATP. Silakan jalankan terlebih dahulu di menu Generator CP & ATP.', 'warning');
         }
         return;
       }
-      const teksAtp = hasilCpTerakhir.atpTerstruktur
-        .slice(0, 2)
-        .map(a => `[${a.kodeAtp}] ${a.rumusan}`)
-        .join('\n');
-      document.getElementById('rppmTujuanPembelajaran').value = teksAtp;
 
-      if (!document.getElementById('rppmTopik').value.trim() && hasilCpTerakhir.topikList?.[0]) {
-        document.getElementById('rppmTopik').value = hasilCpTerakhir.topikList[0];
+      if (penggunaAktif) {
+        document.getElementById('rppmNamaGuru').value = penggunaAktif.nama || '';
+        document.getElementById('rppmNipGuru').value = penggunaAktif.nip === '-' ? '' : (penggunaAktif.nip || '');
       }
+      if (hasilCpTerakhir.mapel) {
+        document.getElementById('rppmMapel').value = hasilCpTerakhir.mapel;
+      }
+      if (hasilCpTerakhir.fase) {
+        document.getElementById('rppmKelasFase').value = hasilCpTerakhir.fase;
+      }
+
+      isiDropdownPilihanAtpRppm();
+      terapkanPilihanAtpKeRppm();
+
+      const badge = document.getElementById('badgeStatusSinkronRppm');
+      if (badge) {
+        badge.innerText = `✓ Tersinkron (${hasilCpTerakhir.atpTerstruktur.length} ATP)`;
+      }
+
       if (tampilkanNotif) {
-        tampilkanToast('Tujuan Pembelajaran berhasil disinkronkan dari hasil ATP!', 'success');
+        tampilkanToast(`Berhasil menyinkronkan ${hasilCpTerakhir.atpTerstruktur.length} urutan ATP ke Tujuan Pembelajaran RPPM-AI!`, 'success');
       }
     }
 
@@ -4130,6 +4268,11 @@
     }
 
     function sinkronkanRppmKeLkm(tampilkanNotif = false) {
+      const adaHasilAtp = Boolean(hasilCpTerakhir && Array.isArray(hasilCpTerakhir.atpTerstruktur) && hasilCpTerakhir.atpTerstruktur.length > 0);
+      const teksAtpLangsung = adaHasilAtp
+        ? hasilCpTerakhir.atpTerstruktur.map(a => `[${a.kodeAtp} / ${a.kodeTp}] ${a.rumusan}`).join('\n')
+        : '';
+
       if (hasilRppmTerakhir) {
         document.getElementById('lkmSekolah').value = hasilRppmTerakhir.sekolah || '';
         document.getElementById('lkmNamaGuru').value = hasilRppmTerakhir.namaGuru || '';
@@ -4140,7 +4283,8 @@
         document.getElementById('lkmAlokasiJp').value = hasilRppmTerakhir.alokasiJp || '2 x 45 Menit';
         document.getElementById('lkmJlhPertemuan').value = hasilRppmTerakhir.jlhPertemuan || '1';
         document.getElementById('lkmTopik').value = hasilRppmTerakhir.topik || '';
-        document.getElementById('lkmTujuanPembelajaran').value = hasilRppmTerakhir.tp || '';
+        // Prioritaskan Tujuan Pembelajaran dari hasil RPPM-AI (yang bersumber dari ATP) atau langsung dari urutan ATP
+        document.getElementById('lkmTujuanPembelajaran').value = hasilRppmTerakhir.tp || teksAtpLangsung;
         document.getElementById('lkmDplTerpilih').value = hasilRppmTerakhir.dplText || '';
         if (!document.getElementById('lkmKonsentrasi').value.trim()) {
           document.getElementById('lkmKonsentrasi').value = penggunaAktif?.jenjang === 'SMK'
@@ -4148,7 +4292,29 @@
             : 'Umum / Akademik';
         }
         if (tampilkanNotif) {
-          tampilkanToast('Seluruh data berhasil diambil dari hasil Generator-RPPM-AI!', 'success');
+          tampilkanToast('Berhasil menyinkronkan Tujuan Pembelajaran (dari urutan ATP) & data RPPM-AI ke LKM!', 'success');
+        }
+      } else if (adaHasilAtp) {
+        // Jika guru langsung masuk ke LKM-AI setelah generate CP & ATP tanpa lewat RPPM-AI
+        if (penggunaAktif) {
+          document.getElementById('lkmSekolah').value = penggunaAktif.sekolah || '';
+          document.getElementById('lkmNamaGuru').value = penggunaAktif.nama || '';
+          document.getElementById('lkmNipGuru').value = penggunaAktif.nip === '-' ? '' : (penggunaAktif.nip || '');
+          if (!document.getElementById('lkmKonsentrasi').value.trim()) {
+            document.getElementById('lkmKonsentrasi').value = penggunaAktif.jenjang === 'SMK'
+              ? (hasilCpTerakhir.mapel || 'Kejuruan')
+              : 'Umum / Akademik';
+          }
+        }
+        document.getElementById('lkmMapel').value = hasilCpTerakhir.mapel || penggunaAktif?.mapel || '';
+        document.getElementById('lkmKelasFase').value = hasilCpTerakhir.fase || 'XI / Fase F';
+        document.getElementById('lkmTopik').value = hasilCpTerakhir.topikList?.[0] || '';
+        document.getElementById('lkmTujuanPembelajaran').value = teksAtpLangsung;
+        if (!document.getElementById('lkmDplTerpilih').value.trim()) {
+          document.getElementById('lkmDplTerpilih').value = 'Penalaran Kritis, Kolaborasi, Komunikasi';
+        }
+        if (tampilkanNotif) {
+          tampilkanToast(`Berhasil menyinkronkan ${hasilCpTerakhir.atpTerstruktur.length} urutan ATP langsung ke kolom Tujuan Pembelajaran LKM-AI!`, 'success');
         }
       } else {
         if (penggunaAktif) {
@@ -4158,7 +4324,7 @@
           document.getElementById('lkmMapel').value = penggunaAktif.mapel || '';
         }
         if (tampilkanNotif) {
-          tampilkanToast('Belum ada hasil di Generator-RPPM-AI. Silakan generate RPP terlebih dahulu atau isi kolom di bawah secara manual.', 'warning');
+          tampilkanToast('Belum ada hasil ATP atau RPPM-AI. Silakan generate terlebih dahulu di menu Generator CP & ATP.', 'warning');
         }
       }
     }
